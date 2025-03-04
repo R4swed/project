@@ -74,8 +74,34 @@
         </form>
     </div>
 
+    <div id="ticketList" class="hidden">
+        <div class="header">
+            <span id="ticketListUserEmail"></span>
+            <button id="ticketListLogoutBtn">Выйти</button>
+        </div>
+        <h2>Ваши заявки</h2>
+        <div id="ticketsContainer"></div>
+        <button id="newTicketBtn">Создать новую заявку</button>
+    </div>
+
+    <div id="chatContainer" class="hidden">
+        <div class="header">
+            <span id="chatUserEmail"></span>
+            <button id="backBtn">Назад</button>
+        </div>
+        <h2>Чат по заявке <span id="ticketId"></span></h2> <!-- Убедитесь, что это span -->
+        <div id="chatMessages" class="chat-messages"></div>
+        <form id="messageForm">
+            <div class="form-group">
+                <textarea id="messageInput" placeholder="Введите сообщение..."></textarea>
+            </div>
+            <button type="submit">Отправить</button>
+        </form>
+    </div>
+
     <script src="/js/api.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/tickets.js"></script>
+    <script src="/js/chat.js"></script>
 </body>
 </html>

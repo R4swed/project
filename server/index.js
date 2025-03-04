@@ -7,6 +7,7 @@ import { dirname, join } from 'path';
 import authRoutes from './routes/authRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import authMiddleware from './middleware/authMiddleware.js';
+import { chatRoutes } from './routes/chatRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,6 +26,7 @@ app.use(express.static(join(__dirname, '../public')));
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', authMiddleware, ticketRoutes);
+app.use('/api/chats', authMiddleware, chatRoutes);
 
 // Маршрут для всех остальных запросов
 app.get('*', (req, res) => {

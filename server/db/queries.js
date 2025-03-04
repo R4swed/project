@@ -45,5 +45,25 @@ export const queries = {
     `;
     const result = await pool.query(query, [status, ticketId]);
     return result.rows[0];
-  }
+  },
+  async getChatMessages(ticketId) {
+    const query = `
+        SELECT * FROM chats 
+        WHERE ticket_id = $1 
+        ORDER BY created_at ASC
+    `;
+    const result = await pool.query(query, [ticketId]);
+    return result.rows;
+},
+
+async createChatMessage(ticketId, senderId, message) {
+    const query = `
+        INSERT INTO chats (ticket_id, sender_id, message, created_at)
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        RETURNING *
+    `;
+    const values = [ticketId, senderId, message];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+}
 };

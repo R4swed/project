@@ -14,14 +14,21 @@ const api = {
     },
 
     async register(email, password) {
-        const response = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        });
-        return await response.json();
+        try {
+            console.log('Отправка запроса на регистрацию:', { email, password });
+            const response = await fetch(`${API_URL}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            console.log('Ответ получен:', response);
+            return response; // Убеждаемся, что возвращаем объект Response
+        } catch (error) {
+            console.error('Ошибка в fetch:', error);
+            throw error; // Передаем ошибку дальше
+        }
     },
 
     // Тикеты

@@ -151,3 +151,147 @@ p {
 #loginForm, #registerForm, #ticketForm {
     animation: fadeIn 0.3s ease-out;
 }
+
+.chat-messages {
+    max-height: 600px; /* Увеличиваем высоту области сообщений */
+    overflow-y: auto; /* Скролл при превышении */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px; /* Увеличиваем внутренний отступ */
+    margin-bottom: 20px; /* Увеличиваем расстояние от поля ввода */
+    background-color: #fafafa;
+}
+
+.chat-messages p {
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.chat-messages .sent {
+    background-color: #e1f5fe;
+    text-align: right;
+}
+
+#messageInput {
+    min-height: 120px; /* Увеличиваем высоту поля ввода */
+    padding: 15px; /* Увеличиваем внутренние отступы */
+    font-size: 16px; /* Увеличиваем размер шрифта для удобства */
+}
+
+#messageForm button {
+    padding: 12px 24px; /* Увеличиваем размер кнопки отправки */
+    font-size: 16px; /* Увеличиваем шрифт кнопки */
+}
+
+/* Хедер чата */
+#chatContainer .header {
+    margin-bottom: 25px; /* Увеличиваем расстояние после хедера */
+}
+
+/* Заголовок чата */
+#chatContainer h2 {
+    font-size: 28px; /* Увеличиваем размер заголовка */
+    margin-bottom: 25px; /* Увеличиваем расстояние после заголовка */
+}
+
+#chatContainer {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 900px; /* Увеличиваем ширину до 900px для большего пространства */
+    margin: 20px auto; /* Центрируем контейнер */
+    animation: fadeIn 0.3s ease-out;
+}
+#ticketList {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px; /* Увеличиваем ширину, чтобы выглядело более просторно */
+    margin: 20px auto; /* Центрируем контейнер */
+    animation: fadeIn 0.3s ease-out;
+}
+
+#ticketsContainer {
+    margin: 20px 0;
+    max-height: 600px; /* Увеличиваем максимальную высоту */
+    overflow-y: auto; /* Скролл при превышении */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    background-color: #fafafa;
+}
+
+.ticket-item {
+    padding: 15px; /* Увеличиваем внутренний отступ */
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin-bottom: 15px; /* Увеличиваем расстояние между элементами */
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Легкая тень для выделения */
+}
+
+.ticket-item:hover {
+    background-color: #f0f0f0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Усиленная тень при наведении */
+}
+
+/* Текст внутри тикета */
+.ticket-item p {
+    margin: 10px 0; /* Увеличиваем отступы между параграфами */
+    font-size: 16px; /* Увеличиваем размер шрифта для лучшей читаемости */
+    color: #333;
+    line-height: 1.5; /* Улучшаем интерлиньяж */
+}
+
+#ticketList h2 {
+    font-size: 28px; /* Увеличиваем размер заголовка */
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* Хедер с email и кнопкой выхода */
+#ticketList .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+#ticketListUserEmail {
+    font-size: 16px; /* Увеличиваем размер текста email */
+    color: #666;
+}
+
+/* Кнопка выхода */
+#ticketListLogoutBtn {
+    background-color: #e74c3c;
+    padding: 10px 20px; /* Увеличиваем размер кнопки */
+}
+
+#ticketListLogoutBtn:hover {
+    background-color: #c0392b;
+}
+
+/* Кнопка "Создать новую заявку" */
+#newTicketBtn {
+    margin-top: 20px;
+    background-color: #2ecc71;
+    padding: 12px 24px; /* Увеличиваем размер кнопки */
+    font-size: 16px; /* Увеличиваем шрифт */
+}
+
+#newTicketBtn:hover {
+    background-color: #27ae60;
+}
