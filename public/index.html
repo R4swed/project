@@ -89,7 +89,8 @@
             <span id="chatUserEmail"></span>
             <button id="backBtn">Назад</button>
         </div>
-        <h2>Чат по заявке <span id="ticketId"></span></h2> <!-- Убедитесь, что это span -->
+        <h2>Чат по заявке <span id="ticketId"></span></h2>
+        <button id="takeTicketBtn" class="hidden">Взять в работу</button>
         <div id="chatMessages" class="chat-messages"></div>
         <form id="messageForm">
             <div class="form-group">
@@ -97,6 +98,33 @@
             </div>
             <button type="submit">Отправить</button>
         </form>
+    </div>
+
+    <div id="supportDashboard" class="hidden">
+        <div class="header">
+            <span id="supportUserEmail"></span>
+            <button id="supportLogoutBtn">Выйти</button>
+        </div>
+        <h2>Панель сотрудника поддержки</h2>
+        <div class="filter-buttons">
+            <button id="filterNewTickets">Новые</button>
+            <button id="filterInProgressTickets">В работе</button>
+            <button id="filterCompletedTickets">Завершённые</button>
+        </div>
+        <div id="supportTicketsContainer">
+            <div id="newTicketsContainer" class="hidden">
+                <h3>Новые заявки</h3>
+                <div id="newTickets"></div>
+            </div>
+            <div id="inProgressTicketsContainer" class="hidden">
+                <h3>В работе</h3>
+                <div id="inProgressTickets"></div>
+            </div>
+            <div id="completedTicketsContainer" class="hidden">
+                <h3>Завершённые</h3>
+                <div id="completedTickets"></div>
+            </div>
+        </div>
     </div>
 
     <script src="/js/api.js"></script>

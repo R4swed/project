@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "nodemon server/index.js",
-    "client": "vite",
-    "build": "vite build"
+    "dev:server": "nodemon server/index.js",
+    "dev:client": "vite",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build": "vite build && cp -r dist/* public/"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
+    "argon2": "^0.41.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -28,7 +30,8 @@
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
-    "nodemon": "^3.1.0",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",

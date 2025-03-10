@@ -1,192 +1,160 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const ticketForm = document.getElementById('ticketForm');
-    const ticketList = document.getElementById('ticketList');
-    const chatContainer = document.getElementById('chatContainer');
+    const elements = {
+        loginForm: document.getElementById('loginForm'),
+        registerForm: document.getElementById('registerForm'),
+        ticketForm: document.getElementById('ticketForm'),
+        ticketList: document.getElementById('ticketList'),
+        chatContainer: document.getElementById('chatContainer'),
+        supportDashboard: document.getElementById('supportDashboard'),
+        newTickets: document.getElementById('newTickets'),
+        inProgressTickets: document.getElementById('inProgressTickets'),
+        completedTickets: document.getElementById('completedTickets'),
+        takeTicketBtn: document.getElementById('takeTicketBtn')
+    };
 
-    function init() {
+    const showSection = (activeSection) => {
+        Object.values(elements).forEach(el => el?.classList.add('hidden'));
+        activeSection?.classList.remove('hidden');
+    };
+
+    const init = () => {
         const token = localStorage.getItem('token');
-        if (!token) {
-            showLoginForm();
+        if (!token) return showSection(elements.loginForm);
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        user.role === 'support' ? showSupportDashboard() : showTicketListOrForm();
+    };
+
+    const showTicketListOrForm = async () => {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/tickets', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const tickets = response.ok ? await response.json() : [];
+        if (tickets.length) {
+            showSection(elements.ticketList);
+            window.loadTicketList();
         } else {
-            showTicketListOrForm();
-        }
-    }
-
-    function showLoginForm() {
-        loginForm.classList.remove('hidden');
-        registerForm.classList.add('hidden');
-        ticketForm.classList.add('hidden');
-        ticketList.classList.add('hidden');
-        chatContainer.classList.add('hidden');
-    }
-
-    function showRegisterForm() {
-        loginForm.classList.add('hidden');
-        registerForm.classList.remove('hidden');
-        ticketForm.classList.add('hidden');
-        ticketList.classList.add('hidden');
-        chatContainer.classList.add('hidden');
-    }
-
-    function showTicketForm() {
-        loginForm.classList.add('hidden');
-        registerForm.classList.add('hidden');
-        ticketForm.classList.remove('hidden');
-        ticketList.classList.add('hidden');
-        chatContainer.classList.add('hidden');
-    }
-
-    function showTicketList() {
-        loginForm.classList.add('hidden');
-        registerForm.classList.add('hidden');
-        ticketForm.classList.add('hidden');
-        ticketList.classList.remove('hidden');
-        chatContainer.classList.add('hidden');
-    }
-
-    async function showTicketListOrForm() {
-        try {
-            const token = localStorage.getItem('token');
-            console.log('Запрос тикетов с токеном:', token);
-            const response = await fetch('/api/tickets', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) {
-                throw new Error(`Ошибка сервера: ${response.status}`);
-            }
-            const tickets = await response.json();
-            console.log('Полученные тикеты:', tickets);
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-    
-            if (tickets && tickets.length > 0) {
-                showTicketList();
-                window.loadTicketList(); // Оставляем вызов глобальной функции
-            } else {
-                console.log('Тикетов нет, показываем форму');
-                showTicketForm();
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки тикетов:', error);
-            showTicketForm();
-        }
-    }
-
-    window.loadTicketList = async function() {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/tickets', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const tickets = await response.json();
-            const ticketsContainer = document.getElementById('ticketsContainer');
-            ticketsContainer.innerHTML = '';
-            tickets.forEach(ticket => {
-                const div = document.createElement('div');
-                div.classList.add('ticket-item');
-                div.innerHTML = `
-                    <p><strong>Тема:</strong> ${ticket.subject}</p>
-                    <p><strong>Статус:</strong> ${ticket.status}</p>
-                    <p><strong>Создан:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
-                `;
-                div.addEventListener('click', () => {
-                    document.getElementById('ticketList').classList.add('hidden');
-                    const chatContainer = document.getElementById('chatContainer');
-                    chatContainer.classList.remove('hidden');
-                    const ticketIdElement = document.getElementById('ticketId');
-                    if (ticketIdElement) {
-                        ticketIdElement.textContent = ticket.id;
-                    }
-                    document.getElementById('chatUserEmail').textContent = user.email;
-                    chatContainer.dataset.ticketSubject = ticket.subject;
-                    document.getElementById('ticketId').parentElement.textContent = `Чат по заявке (${ticket.subject})`;
-                    window.loadChatMessages(ticket.id);
-                });
-                ticketsContainer.appendChild(div);
-            });
-            document.getElementById('ticketListUserEmail').textContent = user.email;
-            return tickets; // Возвращаем массив тикетов
-        } catch (error) {
-            console.error('Ошибка загрузки тикетов:', error);
-            return []; // Возвращаем пустой массив в случае ошибки
+            showSection(elements.ticketForm);
         }
     };
 
-    document.getElementById('show-register').addEventListener('click', (e) => {
-        e.preventDefault();
-        showRegisterForm();
-    });
+    const showSupportDashboard = () => {
+        showSection(elements.supportDashboard);
+        loadSupportTickets('new');
+    };
 
-    document.getElementById('show-login').addEventListener('click', (e) => {
-        e.preventDefault();
-        showLoginForm();
-    });
-
-    loginForm.querySelector('form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
+    const loadSupportTickets = async (status) => {
         try {
-            const data = await api.login(email, password);
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                showTicketListOrForm();
+            const token = localStorage.getItem('token');
+            console.log('Загрузка тикетов с токеном:', token);
+            
+            const response = await fetch('/api/tickets', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            console.log('Статус ответа:', response.status);
+            if (!response.ok) {
+                throw new Error(`Ошибка загрузки тикетов: ${response.statusText}`);
+            }
+    
+            const tickets = await response.json();
+            console.log('Полученные тикеты:', tickets);
+    
+            // Преобразуем 'in_progress' в 'inProgress' для соответствия HTML
+            const containerId = status === 'in_progress' ? 'inProgressTickets' : `${status}Tickets`;
+            const currentContainer = document.getElementById(containerId);
+            console.log('Контейнер для статуса:', currentContainer);
+    
+            if (!currentContainer) {
+                console.error(`Контейнер с id="${containerId}" не найден`);
+                return; // Прерываем выполнение, если контейнер не найден
+            }
+    
+            currentContainer.innerHTML = ''; // Очистка контейнера
+    
+            // Управление видимостью контейнеров
+            ['new', 'in_progress', 'completed'].forEach(type => {
+                const containerWrapper = document.getElementById(`${type === 'in_progress' ? 'inProgress' : type}TicketsContainer`);
+                const ticketList = document.getElementById(`${type === 'in_progress' ? 'inProgress' : type}Tickets`);
+                if (containerWrapper && ticketList) {
+                    if (type === status) {
+                        containerWrapper.classList.remove('hidden');
+                        ticketList.classList.remove('hidden');
+                        containerWrapper.style.display = 'block';
+                        ticketList.style.display = 'block';
+                    } else {
+                        containerWrapper.classList.add('hidden');
+                        ticketList.classList.add('hidden');
+                        containerWrapper.style.display = 'none';
+                        ticketList.style.display = 'none';
+                    }
+                }
+            });
+    
+            const filteredTickets = tickets.filter(ticket => ticket.status === status);
+            console.log(`Тикеты для статуса ${status}:`, filteredTickets);
+    
+            if (filteredTickets.length > 0) {
+                filteredTickets.forEach(ticket => {
+                    const ticketElement = document.createElement('div');
+                    ticketElement.className = 'ticket-item';
+                    ticketElement.setAttribute('data-ticket-id', ticket.id);
+                    ticketElement.innerHTML = `
+                        <p><strong>Тема:</strong> ${ticket.subject || 'Нет темы'}</p>
+                        <p><strong>Email:</strong> ${ticket.email || 'Нет email'}</p>
+                        <p><strong>Статус:</strong> ${ticket.status || 'Нет статуса'}</p>
+                    `;
+                    console.log('Создан элемент тикета:', ticketElement.outerHTML);
+                    currentContainer.appendChild(ticketElement);
+                });
+            } else {
+                currentContainer.innerHTML = '<p>Нет тикетов с данным статусом</p>';
             }
         } catch (error) {
+            console.error('Ошибка в loadSupportTickets:', error);
+        }
+    };
+
+    elements.loginForm?.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const [email, password] = [document.getElementById('login-email').value, document.getElementById('login-password').value];
+        try {
+            const response = await api.login(email, password);
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
+            response.user.role === 'support' ? showSupportDashboard() : showTicketListOrForm();
+        } catch {
             alert('Ошибка входа');
-            console.error('Ошибка входа:', error);
         }
     });
 
-    registerForm.querySelector('form').addEventListener('submit', async (e) => {
+    elements.registerForm?.querySelector('form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-
+        const [email, password] = [document.getElementById('register-email').value, document.getElementById('register-password').value];
         try {
             const response = await api.register(email, password);
-            const data = await response.json();
-            if (response.ok) {
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    showTicketListOrForm();
-                }
-            } else {
-                if (response.status === 400 && data.error === 'Пользователь уже существует') {
-                    alert('Этот email уже зарегистрирован. Попробуйте войти или используйте другой email.');
-                } else {
-                    alert(`Ошибка регистрации: ${data.error || 'Неизвестная ошибка'}`);
-                }
-            }
-        } catch (error) {
-            console.error('Ошибка регистрации:', error);
-            alert('Не удалось подключиться к серверу или обработать ответ: ' + error.message);
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
+            showTicketListOrForm();
+        } catch {
+            alert('Ошибка регистрации');
         }
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        showLoginForm();
+    document.querySelectorAll('#logoutBtn, #ticketListLogoutBtn, #supportLogoutBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            localStorage.clear();
+            showSection(elements.loginForm);
+        });
     });
 
-    document.getElementById('ticketListLogoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        showLoginForm();
-    });
-
-    document.getElementById('newTicketBtn').addEventListener('click', () => {
-        showTicketForm();
-    });
-
-    document.querySelectorAll('#loginForm, #registerForm, #ticketForm, #ticketList, #chatContainer').forEach(form => {
-        form.classList.add('hidden');
-    });
+    document.getElementById('newTicketBtn')?.addEventListener('click', () => showSection(elements.ticketForm));
+    document.getElementById('filterNewTickets')?.addEventListener('click', () => loadSupportTickets('new'));
+    document.getElementById('filterInProgressTickets')?.addEventListener('click', () => loadSupportTickets('in_progress'));
+    document.getElementById('filterCompletedTickets')?.addEventListener('click', () => loadSupportTickets('completed'));
+    document.getElementById('show-register')?.addEventListener('click', e => { e.preventDefault(); showSection(elements.registerForm); });
+    document.getElementById('show-login')?.addEventListener('click', e => { e.preventDefault(); showSection(elements.loginForm); });
 
     init();
 });
