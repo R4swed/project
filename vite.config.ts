@@ -1,19 +1,19 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  root: 'public', // Указываем корень клиентской части
+  root: 'public', 
   server: {
-    port: 3001, // Порт для клиента
+    port: 3001, 
     proxy: {
       '/api': {
-        target: 'http://localhost:3000', // Проксируем API на сервер
+        target: 'http://localhost:3000', 
         changeOrigin: true,
-        rewrite: (path) => path // Сохраняем /api в запросах
+        rewrite: (path) => path 
       }
     }
   },
   build: {
-    outDir: '../dist', // Куда собирать (относительно public)
+    outDir: '../dist', 
     emptyOutDir: true
   }
 });

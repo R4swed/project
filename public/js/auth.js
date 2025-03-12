@@ -105,6 +105,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p><strong>Email:</strong> ${ticket.email || 'Нет email'}</p>
                         <p><strong>Статус:</strong> ${ticket.status || 'Нет статуса'}</p>
                     `;
+                    ticketElement.addEventListener('click', () => {
+                        document.getElementById('supportDashboard').classList.add('hidden');
+                        const chatContainer = document.getElementById('chatContainer');
+                        chatContainer.classList.remove('hidden');
+                        document.querySelector('#chatContainer h2').innerHTML = 
+                            `Чат по заявке (${ticket.subject})<span id="ticketId" class="hidden">${ticket.id}</span>`;
+                            window.loadChatMessages = async (ticketId) => {
+                                const token = localStorage.getItem('token');
+                                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                                
+                                const response = await fetch(`/api/chats/${ticketId}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                });
+                                if (!response.ok) return;
+                            
+                                const messages = await response.json();
+                                chatMessages.innerHTML = messages.map(msg => {
+                                    const isSent = msg.sender_id === user.id;
+                                    return `
+                                        <div class="message ${isSent ? 'sent' : 'received'}">
+                                            <div class="message-info">
+                                                ${isSent ? 'Вы' : 'Собеседник'}
+                                            </div>
+                                            <p>${msg.message}</p>
+                                        </div>
+                                    `;
+                                }).join('');
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            };
+                            window.loadChatMessages(ticket.id);
+                    });
+                    
                     console.log('Создан элемент тикета:', ticketElement.outerHTML);
                     currentContainer.appendChild(ticketElement);
                 });

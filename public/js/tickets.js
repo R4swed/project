@@ -23,10 +23,50 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('ticketForm').classList.add('hidden');
             const chatContainer = document.getElementById('chatContainer');
             chatContainer.classList.remove('hidden');
-            document.getElementById('ticketId').textContent = response.id;
-            document.getElementById('chatUserEmail').textContent = user.email;
-            document.querySelector('#chatContainer h2').textContent = `Чат по заявке (${ticketData.subject})`;
-            window.loadChatMessages(response.id);
+            
+            const chatUserEmail = document.getElementById('chatUserEmail');
+            if (chatUserEmail) chatUserEmail.textContent = user.email;
+            
+            document.querySelector('#chatContainer h2').innerHTML = 
+                `Чат по заявке (${ticketData.subject})<span id="ticketId" class="hidden">${response.id}</span>`;
+            
+            if (typeof window.loadChatMessages === 'function') {
+                window.loadChatMessages(response.id);
+            }
+
+            // Удаляем старый обработчик перед добавлением нового
+            const messageForm = document.getElementById('messageForm');
+            if (messageForm) {
+                // Создаём новую копию формы, чтобы удалить все обработчики
+                const newMessageForm = messageForm.cloneNode(true);
+                messageForm.parentNode.replaceChild(newMessageForm, messageForm);
+                
+                // Добавляем новый обработчик
+                newMessageForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    const messageInput = document.getElementById('messageInput');
+                    const message = messageInput.value.trim();
+                    if (!message) return;
+
+                    const ticketId = document.getElementById('ticketId')?.textContent;
+                    if (!ticketId) return;
+
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/chats', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ ticket_id: ticketId, message })
+                    });
+
+                    if (response.ok) {
+                        messageInput.value = '';
+                        window.loadChatMessages(ticketId);
+                    }
+                });
+            }
         }
     });
 });

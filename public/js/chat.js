@@ -7,15 +7,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.loadChatMessages = async (ticketId) => {
         const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
         const response = await fetch(`/api/chats/${ticketId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) return;
-
+    
         const messages = await response.json();
-        chatMessages.innerHTML = messages.map(msg =>
-            `<p class="${msg.sender_id === user.id ? 'sent' : ''}">${msg.sender_id === user.id ? 'Вы' : 'Сотрудник'}: ${msg.message}</p>`
-        ).join('');
+        chatMessages.innerHTML = messages.map(msg => {
+            const isSent = msg.sender_id === user.id;
+            return `
+                <div class="message ${isSent ? 'sent' : 'received'}">
+                    <div class="message-info">
+                        ${isSent ? 'Вы' : 'Собеседник'}
+                    </div>
+                    <p>${msg.message}</p>
+                </div>
+            `;
+        }).join('');
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
@@ -74,8 +84,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('backBtn')?.addEventListener('click', () => {
+        const chatContainer = document.getElementById('chatContainer');
         chatContainer.classList.add('hidden');
-        document.getElementById('ticketList').classList.remove('hidden');
-        window.loadTicketList();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.role === 'support') {
+            document.getElementById('supportDashboard').classList.remove('hidden');
+            loadSupportTickets('new'); // Обновляем список тикетов
+        } else {
+            document.getElementById('ticketList').classList.remove('hidden');
+            window.loadTicketList();
+        }
     });
 });
