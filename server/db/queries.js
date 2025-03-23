@@ -23,31 +23,97 @@ export const queries = {
     },
 
     async getTicketsByUserId(userId) {
-        const result = await pool.query(
-            'SELECT id, company, email, product, subject, description, status, created_at, user_id FROM tickets WHERE user_id = $1 ORDER BY created_at DESC',
-            [userId]
-        );
+        const query = `
+            SELECT id, company, email, product, subject, description, 
+                   status, created_at, user_id, support_id
+            FROM tickets 
+            WHERE user_id = $1 
+            ORDER BY created_at DESC
+        `;
+        const result = await pool.query(query, [userId]);
         return result.rows;
     },
 
-    async getAllTickets() {
+    async getTicketById(ticketId) {
         const query = `
             SELECT id, company, email, product, subject, description, 
-                   status, created_at, user_id 
+                   status, created_at, user_id, support_id
             FROM tickets 
+            WHERE id = $1
+        `;
+        const result = await pool.query(query, [ticketId]);
+        return result.rows[0];
+    },
+
+    async getUserById(userId) {
+        const result = await pool.query(
+            'SELECT id, email, role FROM users WHERE id = $1',
+            [userId]
+        );
+        return result.rows[0] || null;
+    },
+
+    async getAllNewTickets() {
+        const query = `
+            SELECT id, company, email, product, subject, description, 
+                   status, created_at, user_id, support_id
+            FROM tickets 
+            WHERE status = 'new'
             ORDER BY created_at DESC
         `;
         const result = await pool.query(query);
-        console.log('Все тикеты из базы данных:', result.rows);
         return result.rows;
     },
 
-    async updateTicketStatus(ticketId, status) {
-        const result = await pool.query(
-            'UPDATE tickets SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, status, updated_at',
-            [status, ticketId]
-        );
-        return result.rows[0];
+    async getSupportTickets(supportId) {
+        const query = `
+            SELECT id, company, email, product, subject, description, 
+                   status, created_at, user_id, support_id
+            FROM tickets 
+            WHERE status IN ('in_progress', 'completed') 
+            AND support_id = $1
+            ORDER BY created_at DESC
+        `;
+        const result = await pool.query(query, [supportId]);
+        return result.rows;
+    },
+
+    async getSupportTicketsByStatus(supportId, status) {
+        const query = `
+            SELECT id, company, email, product, subject, description, 
+                   status, created_at, user_id, support_id
+            FROM tickets 
+            WHERE status = $1 
+            AND support_id = $2
+            ORDER BY created_at DESC
+        `;
+        const result = await pool.query(query, [status, supportId]);
+        return result.rows;
+    },
+    
+    async updateTicketStatus(ticketId, status, supportId) {
+        try {
+            const query = `
+                UPDATE tickets 
+                SET status = $1, 
+                    support_id = $2, 
+                    updated_at = CURRENT_TIMESTAMP 
+                WHERE id = $3 
+                RETURNING id, company, email, product, subject, description, 
+                         status, created_at, user_id, support_id
+            `;
+            console.log('Updating ticket:', { ticketId, status, supportId }); // Добавим лог для отладки
+            const result = await pool.query(query, [status, supportId, ticketId]);
+            
+            if (result.rows.length === 0) {
+                throw new Error('Тикет не найден');
+            }
+            
+            return result.rows[0];
+        } catch (error) {
+            console.error('Ошибка в updateTicketStatus:', error);
+            throw error;
+        }
     },
 
     async getChatMessages(ticketId) {

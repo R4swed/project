@@ -150,6 +150,16 @@ button:active {
     color: #1e293b;
 }
 
+#completeTicketBtn {
+    background-color: #6366f1;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+#completeTicketBtn:hover {
+    background-color: #4f46e5;
+}
+
 /* Чат */
 .chat-messages {
     max-height: 500px;

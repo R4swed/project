@@ -5,21 +5,39 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
     try {
-        console.log('Получение тикетов для пользователя:', req.user.userId, 'роль:', req.user.role);
         let tickets;
-        
-        // Если пользователь - сотрудник поддержки, получаем все тикеты
         if (req.user.role === 'support') {
-            tickets = await queries.getAllTickets();
+            if (req.query.filter === 'new') {
+                tickets = await queries.getAllNewTickets();
+            } else if (req.query.filter === 'completed') {
+                tickets = await queries.getSupportTicketsByStatus(req.user.userId, 'completed');
+            } else if (req.query.filter === 'in_progress') {
+                tickets = await queries.getSupportTicketsByStatus(req.user.userId, 'in_progress');
+            } else {
+                tickets = await queries.getSupportTickets(req.user.userId);
+            }
         } else {
-            // Для обычных пользователей получаем только их тикеты
             tickets = await queries.getTicketsByUserId(req.user.userId);
         }
-        
-        console.log('Тикеты из базы данных:', tickets);
         res.json(tickets);
     } catch (error) {
-        console.error('Ошибка получения тикетов:', error);
+        console.error('Ошибка при получении тикетов:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const ticket = await queries.getTicketById(id);
+        
+        if (!ticket) {
+            return res.status(404).json({ error: 'Тикет не найден' });
+        }
+        
+        res.json(ticket);
+    } catch (error) {
+        console.error('Ошибка при получении тикета:', error);
         res.status(500).json({ error: 'Внутренняя ошибка сервера' });
     }
 });
@@ -27,22 +45,12 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const { company, email, product, subject, description } = req.body;
-        const userId = req.user.userId; // Используем userId вместо id
-
-        console.log('Создание тикета с данными:', { company, email, product, subject, description, userId }); // Логирование
+        const userId = req.user.userId;
         const ticket = await queries.createTicket({
-            company,
-            email,
-            product,
-            subject,
-            description,
-            userId
+            company, email, product, subject, description, userId
         });
-
-        console.log('Созданный тикет:', ticket); // Логирование
         res.json(ticket);
     } catch (error) {
-        console.error('Ошибка создания тикета:', error);
         res.status(500).json({ error: 'Ошибка создания тикета' });
     }
 });
@@ -51,10 +59,17 @@ router.patch('/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const ticket = await queries.updateTicketStatus(id, status);
+        const supportId = req.user.userId;
+        
+        console.log('Updating ticket status:', { id, status, supportId }); // Добавим лог
+        
+        const ticket = await queries.updateTicketStatus(id, status, supportId);
+        
+        console.log('Updated ticket:', ticket); // Добавим лог результата
+        
         res.json(ticket);
     } catch (error) {
-        console.error('Ошибка обновления статуса:', error);
+        console.error('Ошибка при обновлении статуса:', error);
         res.status(500).json({ error: 'Внутренняя ошибка сервера' });
     }
 });
