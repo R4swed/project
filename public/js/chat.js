@@ -24,6 +24,51 @@ export const initChat = () => {
         }
     };
 
+    const attachFileBtn = document.getElementById('attachFileBtn');
+const fileInput = document.getElementById('fileInput');
+
+if (attachFileBtn && fileInput) {
+    attachFileBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Файл слишком большой. Максимальный размер 10 МБ');
+            return;
+        }
+
+        const ticketId = document.getElementById('ticketId')?.textContent;
+        if (!ticketId) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('ticket_id', ticketId);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/chats/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Ошибка загрузки файла');
+            
+            await loadChatMessages(ticketId);
+            fileInput.value = '';
+        } catch (error) {
+            alert('Не удалось загрузить файл');
+        }
+    });
+}
+
+
     const loadChatMessages = async (ticketId) => {
         const chatMessages = document.getElementById('chatMessages');
         if (!chatMessages) return;
@@ -59,12 +104,30 @@ export const initChat = () => {
                 const isSent = msg.sender_id === currentUser.id;
                 
                 messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-                messageDiv.innerHTML = `
-                    <div class="message-info">
-                        ${isSent ? 'Вы' : 'Собеседник'}
-                    </div>
-                    <p>${msg.message}</p>
-                `;
+                
+                const fileMatch = msg.message.match(/\[FILE\](.*?)\[\/FILE\]/);
+                if (fileMatch) {
+                    const fileUrl = fileMatch[1];
+                    const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif)$/i);
+                    
+                    messageDiv.innerHTML = `
+                        <div class="message-info">
+                            ${isSent ? 'Вы' : 'Собеседник'}
+                        </div>
+                        ${isImage 
+                            ? `<img src="${fileUrl}" alt="Изображение" onclick="window.open('${fileUrl}', '_blank')">`
+                            : `<video controls><source src="${fileUrl}" type="video/mp4"></video>`
+                        }
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="message-info">
+                            ${isSent ? 'Вы' : 'Собеседник'}
+                        </div>
+                        <p>${msg.message}</p>
+                    `;
+                }
+                
                 chatMessages.appendChild(messageDiv);
             });
             

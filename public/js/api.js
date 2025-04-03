@@ -92,7 +92,7 @@ export const api = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ status: 'completed' }) // Убедимся что передаем правильный статус
+            body: JSON.stringify({ status: 'completed' }) 
         });
         if (!response.ok) {
             const error = await response.json();

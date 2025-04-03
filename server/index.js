@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import authMiddleware from './middleware/authMiddleware.js';
 import { chatRoutes } from './routes/chatRoutes.js';
+import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
