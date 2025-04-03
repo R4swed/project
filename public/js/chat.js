@@ -2,6 +2,28 @@ import { showSection, elements } from './utils.js';
 import { api } from './api.js';
 
 export const initChat = () => {
+    // Обработчик формы сообщений
+    const messageForm = document.getElementById('messageForm');
+    const newMessageForm = messageForm?.cloneNode(true);
+    if (messageForm && newMessageForm) {
+        messageForm.parentNode.replaceChild(newMessageForm, messageForm);
+    }
+
+    const updateFormState = (status) => {
+        const messageInput = document.getElementById('messageInput');
+        const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
+        const isDisabled = status === 'new' || status === 'completed';
+        
+        if (messageInput && submitButton) {
+            messageInput.disabled = isDisabled;
+            submitButton.disabled = isDisabled;
+            
+            messageInput.placeholder = isDisabled ? 
+                (status === 'new' ? 'Возьмите тикет в работу, чтобы начать переписку' : 'Тикет завершён') : 
+                'Введите сообщение...';
+        }
+    };
+
     const loadChatMessages = async (ticketId) => {
         const chatMessages = document.getElementById('chatMessages');
         if (!chatMessages) return;
@@ -49,29 +71,41 @@ export const initChat = () => {
             chatMessages.scrollTop = chatMessages.scrollHeight;
     
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            if (user.role === 'support') {
-                const response = await fetch(`/api/tickets/${ticketId}?t=${Date.now()}`, {
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Ошибка получения тикетов');
-                const currentTicket = await response.json();
-                
-                const takeTicketBtn = document.getElementById('takeTicketBtn');
-                const completeTicketBtn = document.getElementById('completeTicketBtn');
-                
-                if (takeTicketBtn) {
-                    takeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'new');
-                }
-                
-                if (completeTicketBtn) {
-                    completeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'in_progress');
-                }
+    if (user.role === 'support') {
+        const response = await fetch(`/api/tickets/${ticketId}?t=${Date.now()}`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
+        });
+        
+        if (!response.ok) throw new Error('Ошибка получения тикетов');
+        const currentTicket = await response.json();
+        
+        const takeTicketBtn = document.getElementById('takeTicketBtn');
+        const completeTicketBtn = document.getElementById('completeTicketBtn');
+        
+        if (takeTicketBtn) {
+            takeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'new');
+        }
+        
+        if (completeTicketBtn) {
+            completeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'in_progress');
+        }
+
+        updateFormState(currentTicket.status);
+    } else {
+        // Для клиента форма всегда активна
+        const messageInput = document.getElementById('messageInput');
+        const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
+        
+        if (messageInput && submitButton) {
+            messageInput.disabled = false;
+            submitButton.disabled = false;
+            messageInput.placeholder = 'Введите сообщение...';
+        }
+    }
         } catch (error) {
             console.error('Ошибка загрузки чата:', error);
         }
@@ -79,12 +113,7 @@ export const initChat = () => {
 
     window.loadChatMessages = loadChatMessages;
 
-    // Обработчик формы сообщений
-    const messageForm = document.getElementById('messageForm');
-    if (messageForm) {
-        const newMessageForm = messageForm.cloneNode(true);
-        messageForm.parentNode.replaceChild(newMessageForm, messageForm);
-        
+    if (newMessageForm) {
         newMessageForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const messageInput = document.getElementById('messageInput');

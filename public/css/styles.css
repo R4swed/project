@@ -110,6 +110,18 @@ textarea {
     resize: vertical;
 }
 
+input:disabled, 
+textarea:disabled, 
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: #f1f5f9;
+}
+
+textarea:disabled::placeholder {
+    color: #94a3b8;
+}
+
 /* Кнопки */
 button {
     padding: 0.75rem 1.5rem;
