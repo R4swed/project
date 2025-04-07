@@ -49,7 +49,33 @@ export const initTickets = () => {
     if (ticketForm) {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const emailInput = document.getElementById('email');
+        const fileInput = document.getElementById('ticketFileInput');
+        const attachBtn = document.getElementById('ticketAttachFileBtn');
+        let selectedFile = null;
+
         if (user.email && emailInput) emailInput.value = user.email;
+
+        // Обработчик кнопки прикрепления файла
+        if (attachBtn && fileInput) {
+            attachBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files[0];
+                if (!file) return;
+
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Файл слишком большой. Максимальный размер 10 МБ');
+                    fileInput.value = '';
+                    selectedFile = null;
+                    return;
+                }
+
+                selectedFile = file;
+                attachBtn.textContent = `📎 ${file.name}`;
+            });
+        }
 
         ticketForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -68,9 +94,27 @@ export const initTickets = () => {
                     if (ticketData.description) {
                         await api.sendChatMessage(response.id, ticketData.description);
                     }
+
+                    // Если есть прикрепленный файл, отправляем его
+                    if (selectedFile) {
+                        const formData = new FormData();
+                        formData.append('file', selectedFile);
+                        formData.append('ticket_id', response.id);
+
+                        const token = localStorage.getItem('token');
+                        await fetch('/api/chats/upload', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: formData
+                        });
+                    }
         
                     ticketForm.reset();
                     if (user.email) emailInput.value = user.email;
+                    if (attachBtn) attachBtn.textContent = '📎 Прикрепить файл';
+                    selectedFile = null;
                     showSection(elements.chatContainer);
                     document.querySelector('#chatContainer h2').innerHTML = 
                         `Чат по заявке (${ticketData.subject})<span id="ticketId" class="hidden">${response.id}</span>`;

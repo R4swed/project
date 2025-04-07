@@ -3,6 +3,7 @@ import { queries } from '../db/queries.js';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
+import { io } from '../index.js';
 
 const router = express.Router();
 
@@ -56,8 +57,17 @@ router.post('/', async (req, res) => {
     const { ticket_id, message } = req.body;
     const senderId = req.user.userId;
     if (!ticket_id || !message) return res.status(400).json({ error: 'Missing ticket_id or message' });
-    const newMessage = await queries.createChatMessage(ticket_id, senderId, message);
-    res.json(newMessage);
+    
+    try {
+        const newMessage = await queries.createChatMessage(ticket_id, senderId, message);
+        
+        // Отправляем сообщение всем подключенным к этому тикету
+        io.to(`ticket-${ticket_id}`).emit('new-message', newMessage);
+        
+        res.json(newMessage);
+    } catch (error) {
+        res.status(500).json({ error: 'Ошибка отправки сообщения' });
+    }
 });
 
 router.post('/upload', upload.single('file'), async (req, res) => {
@@ -79,6 +89,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             senderId, 
             `[FILE]${result.secure_url}[/FILE]`
         );
+
+        // Отправляем уведомление о новом файле
+        io.to(`ticket-${ticket_id}`).emit('new-message', message);
 
         res.json({ message, fileUrl: result.secure_url });
     } catch (error) {

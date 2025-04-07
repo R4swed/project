@@ -1,7 +1,27 @@
 import { showSection, elements } from './utils.js';
 import { api } from './api.js';
 
+let socket;
+
 export const initChat = () => {
+    
+    if (!socket && window.io) {
+        socket = window.io(window.location.origin);
+        
+        socket.on('connect', () => {
+            console.log('Подключено к веб-сокетам');
+        });
+
+        socket.on('new-message', (message) => {
+            const ticketId = document.getElementById('ticketId')?.textContent;
+            if (ticketId) {
+                loadChatMessages(ticketId);
+            }
+        });
+    }
+
+
+
     // Обработчик формы сообщений
     const messageForm = document.getElementById('messageForm');
     const newMessageForm = messageForm?.cloneNode(true);
@@ -68,8 +88,8 @@ if (attachFileBtn && fileInput) {
     });
 }
 
-
     const loadChatMessages = async (ticketId) => {
+        socket.emit('join-ticket', ticketId);
         const chatMessages = document.getElementById('chatMessages');
         if (!chatMessages) return;
         
@@ -134,7 +154,6 @@ if (attachFileBtn && fileInput) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
     
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.role === 'support') {
         const response = await fetch(`/api/tickets/${ticketId}?t=${Date.now()}`, {
             headers: { 
                 'Authorization': `Bearer ${token}`,
@@ -146,33 +165,42 @@ if (attachFileBtn && fileInput) {
         if (!response.ok) throw new Error('Ошибка получения тикетов');
         const currentTicket = await response.json();
         
-        const takeTicketBtn = document.getElementById('takeTicketBtn');
-        const completeTicketBtn = document.getElementById('completeTicketBtn');
-        
-        if (takeTicketBtn) {
-            takeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'new');
-        }
-        
-        if (completeTicketBtn) {
-            completeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'in_progress');
-        }
+        if (user.role === 'support') {
+            const takeTicketBtn = document.getElementById('takeTicketBtn');
+            const completeTicketBtn = document.getElementById('completeTicketBtn');
+            
+            if (takeTicketBtn) {
+                takeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'new');
+            }
+            
+            if (completeTicketBtn) {
+                completeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'in_progress');
+            }
 
-        updateFormState(currentTicket.status);
-    } else {
-        // Для клиента форма всегда активна
-        const messageInput = document.getElementById('messageInput');
-        const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
-        
-        if (messageInput && submitButton) {
-            messageInput.disabled = false;
-            submitButton.disabled = false;
-            messageInput.placeholder = 'Введите сообщение...';
+            updateFormState(currentTicket.status);
+        } else {
+            // Для клиента форма блокируется только если тикет завершен
+            const messageInput = document.getElementById('messageInput');
+            const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
+            const attachFileBtn = document.getElementById('attachFileBtn');
+            
+            if (messageInput && submitButton) {
+                const isCompleted = currentTicket.status === 'completed';
+                messageInput.disabled = isCompleted;
+                submitButton.disabled = isCompleted;
+                if (attachFileBtn) {
+                    attachFileBtn.style.display = isCompleted ? 'none' : 'flex';
+                }
+                
+                messageInput.placeholder = isCompleted ? 
+                    'Тикет завершён' : 
+                    'Введите сообщение...';
+            }
         }
+    } catch (error) {
+        console.error('Ошибка загрузки чата:', error);
     }
-        } catch (error) {
-            console.error('Ошибка загрузки чата:', error);
-        }
-    };
+};
 
     window.loadChatMessages = loadChatMessages;
 
@@ -216,6 +244,11 @@ if (attachFileBtn && fileInput) {
         backButton.parentNode.replaceChild(newBackButton, backButton);
         
         newBackButton.addEventListener('click', () => {
+            const ticketId = document.getElementById('ticketId')?.textContent;
+            if (ticketId) {
+                socket.emit('leave-ticket', ticketId);
+            }
+            
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             showSection(user.role === 'support' ? elements.supportDashboard : elements.ticketList);
             

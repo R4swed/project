@@ -21,6 +21,8 @@
     "multer": "^1.4.5-lts.1",
     "pg": "^8.13.3",
     "pg-pool": "^3.7.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "streamifier": "^0.1.1"
   },
   "devDependencies": {

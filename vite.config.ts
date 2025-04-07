@@ -1,19 +1,22 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  root: 'public', 
+  root: 'public',
   server: {
-    port: 3001, 
+    port: 3001,
     proxy: {
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        ws: true
+      },
       '/api': {
-        target: 'http://localhost:3000', 
-        changeOrigin: true,
-        rewrite: (path) => path 
+        target: 'http://localhost:3000',
+        changeOrigin: true
       }
     }
   },
   build: {
-    outDir: '../dist', 
+    outDir: '../dist',
     emptyOutDir: true
   }
 });
