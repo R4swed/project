@@ -5,9 +5,9 @@ export default defineConfig({
   server: {
     port: 3001,
     proxy: {
-      '/socket.io': {
+      '/api/socketio': {
         target: 'http://localhost:3000',
-        ws: true
+        ws: true // Для WebSocket
       },
       '/api': {
         target: 'http://localhost:3000',

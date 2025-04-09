@@ -6,17 +6,26 @@ import { api } from './api.js';
 export const initAuth = () => {
     elements.loginForm?.querySelector('form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const [email, password] = [
-            document.getElementById('login-email').value,
-            document.getElementById('login-password').value
-        ];
         try {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!email || !password) {
+                alert('Пожалуйста, заполните все поля');
+                return;
+            }
+    
             const response = await api.login(email, password);
+            if (!response || !response.token) {
+                throw new Error('Некорректный ответ от сервера');
+            }
+    
             localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify(response.user));
             response.user.role === 'support' ? showSupportDashboard() : showTicketListOrForm();
-        } catch {
-            alert('Неверный email или пароль');
+        } catch (error) {
+            console.error('Ошибка входа:', error);
+            alert('Ошибка входа: ' + (error.message || 'Неверный email или пароль'));
         }
     });
 

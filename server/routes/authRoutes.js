@@ -18,13 +18,29 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await queries.getUserByEmail(email);
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email и пароль обязательны' });
+        }
+        
+        const user = await queries.getUserByEmail(email);
+        
+        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+            return res.status(401).json({ error: 'Неверный email или пароль' });
+        }
+        
+        const token = jwt.sign(
+            { userId: user.id, email: user.email, role: user.role }, 
+            process.env.JWT_SECRET || 'your-secret-key'
+        );
+        
+        res.json({ user, token });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Ошибка сервера' });
     }
-    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET || 'your-secret-key');
-    res.json({ user, token });
 });
 
 router.get('/me', authMiddleware, async (req, res) => {

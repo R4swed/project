@@ -6,23 +6,39 @@ let socket;
 export const initChat = () => {
     
     if (!socket && window.io) {
-        socket = window.io(window.location.origin);
-        
+        socket = window.io(window.location.origin, {
+            transports: ['websocket'],
+            reconnectionAttempts: 3,
+            timeout: 20000
+        });
+    
         socket.on('connect', () => {
-            console.log('Подключено к веб-сокетам');
+            // Убираем лишние логи
+            console.log('Connected');
+        });
+    
+        socket.on('connect_error', () => {
+            // Убираем подробности ошибок
+            console.warn('Connection error');
         });
 
-        socket.on('new-message', (message) => {
-            const ticketId = document.getElementById('ticketId')?.textContent;
-            if (ticketId) {
+        // Обработчик нового сообщения
+        socket.on('new-message', (ticketId) => {
+            const currentTicketId = document.getElementById('ticketId')?.textContent;
+            if (currentTicketId === ticketId) {
+                loadChatMessages(ticketId);
+            }
+        });
+
+        // Обработчик обновления статуса тикета
+        socket.on('ticket-updated', (ticketId) => {
+            const currentTicketId = document.getElementById('ticketId')?.textContent;
+            if (currentTicketId === ticketId) {
                 loadChatMessages(ticketId);
             }
         });
     }
 
-
-
-    // Обработчик формы сообщений
     const messageForm = document.getElementById('messageForm');
     const newMessageForm = messageForm?.cloneNode(true);
     if (messageForm && newMessageForm) {

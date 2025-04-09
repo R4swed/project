@@ -3,7 +3,7 @@ import { queries } from '../db/queries.js';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
-import { io } from '../index.js';
+import { getIO } from '../index.js';
 
 const router = express.Router();
 
@@ -33,7 +33,11 @@ const upload = multer({
 const uploadToCloudinary = async (buffer, options = {}) => {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-            options,
+            {
+                ...options,
+                resource_type: "auto",
+                folder: "support-chat"
+            },
             (error, result) => {
                 if (error) return reject(error);
                 resolve(result);
@@ -46,6 +50,7 @@ const uploadToCloudinary = async (buffer, options = {}) => {
         bufferStream.pipe(uploadStream);
     });
 };
+
 
 router.get('/:ticketId', async (req, res) => {
     const { ticketId } = req.params;
@@ -61,8 +66,8 @@ router.post('/', async (req, res) => {
     try {
         const newMessage = await queries.createChatMessage(ticket_id, senderId, message);
         
-        // Отправляем сообщение всем подключенным к этому тикету
-        io.to(`ticket-${ticket_id}`).emit('new-message', newMessage);
+        const io = getIO();
+        io.to(`ticket-${ticket_id}`).emit('new-message', ticket_id); // Изменили payload
         
         res.json(newMessage);
     } catch (error) {
@@ -76,10 +81,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             return res.status(400).json({ error: 'Файл не загружен' });
         }
 
-        const result = await uploadToCloudinary(req.file.buffer, {
-            resource_type: "auto",
-            folder: "support-chat",
-        });
+        const result = await uploadToCloudinary(req.file.buffer);
 
         const { ticket_id } = req.body;
         const senderId = req.user.userId;
@@ -90,8 +92,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             `[FILE]${result.secure_url}[/FILE]`
         );
 
-        // Отправляем уведомление о новом файле
-        io.to(`ticket-${ticket_id}`).emit('new-message', message);
+        const io = getIO();
+        io.to(`ticket-${ticket_id}`).emit('new-message', ticket_id); // Изменили payload
 
         res.json({ message, fileUrl: result.secure_url });
     } catch (error) {

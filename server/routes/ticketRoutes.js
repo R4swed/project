@@ -1,5 +1,6 @@
 import express from 'express';
 import { queries } from '../db/queries.js';
+import { getIO } from '../index.js';
 
 const router = express.Router();
 
@@ -61,11 +62,11 @@ router.patch('/:id/status', async (req, res) => {
         const { status } = req.body;
         const supportId = req.user.userId;
         
-        console.log('Updating ticket status:', { id, status, supportId }); // Добавим лог
-        
         const ticket = await queries.updateTicketStatus(id, status, supportId);
         
-        console.log('Updated ticket:', ticket); // Добавим лог результата
+        // Добавляем эмит события
+        const io = getIO();
+        io.to(`ticket-${id}`).emit('ticket-updated', id);
         
         res.json(ticket);
     } catch (error) {

@@ -1,3 +1,5 @@
+// Удаляем экспорт по умолчанию для Vercel
+// Оставляем только основной код сервера
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -10,54 +12,38 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import authMiddleware from './middleware/authMiddleware.js';
 import { chatRoutes } from './routes/chatRoutes.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 dotenv.config();
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-    cors: {
-        origin: process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : undefined,
-        credentials: true
-    }
-});
 
-app.use(cors({
-    origin: process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : undefined,
-    credentials: true
-}));
+// Базовые middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.static(join(__dirname, '../public')));
+app.use(express.static(join(dirname(fileURLToPath(import.meta.url)), '../public')));
 
-// WebSocket соединения
-io.on('connection', (socket) => {
-    console.log('Клиент подключился');
-
-    socket.on('join-ticket', (ticketId) => {
-        socket.join(`ticket-${ticketId}`);
-        console.log(`Клиент присоединился к тикету ${ticketId}`);
-    });
-
-    socket.on('leave-ticket', (ticketId) => {
-        socket.leave(`ticket-${ticketId}`);
-        console.log(`Клиент покинул тикет ${ticketId}`);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Клиент отключился');
-    });
-});
-
+// API маршруты
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', authMiddleware, ticketRoutes);
 app.use('/api/chats', authMiddleware, chatRoutes);
 
-app.get('*', (req, res) => res.sendFile(join(__dirname, '../public/index.html')));
+// Инициализация Socket.IO
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
+io.on('connection', socket => {
+    console.log('Client connected:', socket.id);
+    socket.on('join-ticket', (ticketId) => socket.join(`ticket-${ticketId}`));
+    socket.on('leave-ticket', (ticketId) => socket.leave(`ticket-${ticketId}`));
+});
+
+export const getIO = () => io;
+
+// Запуск сервера
 const PORT = process.env.PORT || 3000;
-if (process.env.NODE_ENV !== 'production') {
-    httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
-
-export { app, io, httpServer };
+httpServer.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

@@ -1,12 +1,34 @@
 export const api = {
     async login(email, password) {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        if (!response.ok) throw new Error('Ошибка входа');
-        return response.json();
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.text();
+                let errorMessage;
+                try {
+                    const jsonError = JSON.parse(errorData);
+                    errorMessage = jsonError.error;
+                } catch (e) {
+                    errorMessage = errorData;
+                }
+                throw new Error(errorMessage || 'Ошибка входа');
+            }
+            
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('API login error:', error);
+            throw error;
+        }
     },
 
     async register(email, password) {
@@ -100,4 +122,22 @@ export const api = {
         }
         return response.json();
     },
+
+    async getChatMessages(ticketId) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/chats/${ticketId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Ошибка получения сообщений');
+        return response.json();
+    },
+
+    async getTicket(ticketId) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/tickets/${ticketId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Ошибка получения тикета');
+        return response.json();
+    }
 };
