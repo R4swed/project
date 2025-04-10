@@ -1,5 +1,13 @@
 export const showSection = (activeSection) => {
-    const sections = ['loginForm', 'registerForm', 'ticketForm', 'ticketList', 'chatContainer', 'supportDashboard'];
+    const sections = [
+        'loginForm', 
+        'registerForm', 
+        'ticketForm', 
+        'ticketList', 
+        'chatContainer', 
+        'supportDashboard',
+        'adminDashboard' 
+    ];
     sections.forEach(id => document.getElementById(id)?.classList.add('hidden'));
     activeSection?.classList.remove('hidden');
 };
@@ -10,7 +18,8 @@ export const elements = {
     ticketForm: document.getElementById('ticketForm'),
     ticketList: document.getElementById('ticketList'),
     chatContainer: document.getElementById('chatContainer'),
-    supportDashboard: document.getElementById('supportDashboard')
+    supportDashboard: document.getElementById('supportDashboard'),
+    adminDashboard: document.getElementById('adminDashboard')
 };
 
 export const statusLocales = {

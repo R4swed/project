@@ -104,115 +104,123 @@ if (attachFileBtn && fileInput) {
     });
 }
 
-    const loadChatMessages = async (ticketId) => {
-        socket.emit('join-ticket', ticketId);
-        const chatMessages = document.getElementById('chatMessages');
-        if (!chatMessages) return;
-        
-        const token = localStorage.getItem('token');
-        if (!token) return;
+const loadChatMessages = async (ticketId) => {
+    socket.emit('join-ticket', ticketId);
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
     
-        try {
-            const userResponse = await fetch('/api/auth/me', {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Cache-Control': 'no-cache'
-                }
-            });
-            
-            if (!userResponse.ok) throw new Error('Ошибка получения данных пользователя');
-            const currentUser = await userResponse.json();
-    
-            const messagesResponse = await fetch(`/api/chats/${ticketId}`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Cache-Control': 'no-cache'
-                }
-            });
-            
-            if (!messagesResponse.ok) throw new Error('Ошибка получения сообщений');
-            const messages = await messagesResponse.json();
-            
-            chatMessages.innerHTML = '';
-            
-            messages.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                const isSent = msg.sender_id === currentUser.id;
-                
-                messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-                
-                const fileMatch = msg.message.match(/\[FILE\](.*?)\[\/FILE\]/);
-                if (fileMatch) {
-                    const fileUrl = fileMatch[1];
-                    const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif)$/i);
-                    
-                    messageDiv.innerHTML = `
-                        <div class="message-info">
-                            ${isSent ? 'Вы' : 'Собеседник'}
-                        </div>
-                        ${isImage 
-                            ? `<img src="${fileUrl}" alt="Изображение" onclick="window.open('${fileUrl}', '_blank')">`
-                            : `<video controls><source src="${fileUrl}" type="video/mp4"></video>`
-                        }
-                    `;
-                } else {
-                    messageDiv.innerHTML = `
-                        <div class="message-info">
-                            ${isSent ? 'Вы' : 'Собеседник'}
-                        </div>
-                        <p>${msg.message}</p>
-                    `;
-                }
-                
-                chatMessages.appendChild(messageDiv);
-            });
-            
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const response = await fetch(`/api/tickets/${ticketId}?t=${Date.now()}`, {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        const userResponse = await fetch('/api/auth/me', {
             headers: { 
                 'Authorization': `Bearer ${token}`,
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
+                'Cache-Control': 'no-cache'
             }
         });
         
-        if (!response.ok) throw new Error('Ошибка получения тикетов');
-        const currentTicket = await response.json();
-        
-        if (user.role === 'support') {
-            const takeTicketBtn = document.getElementById('takeTicketBtn');
-            const completeTicketBtn = document.getElementById('completeTicketBtn');
-            
-            if (takeTicketBtn) {
-                takeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'new');
-            }
-            
-            if (completeTicketBtn) {
-                completeTicketBtn.classList.toggle('hidden', currentTicket.status !== 'in_progress');
-            }
+        if (!userResponse.ok) throw new Error('Ошибка получения данных пользователя');
+        const currentUser = await userResponse.json();
 
-            updateFormState(currentTicket.status);
-        } else {
-            // Для клиента форма блокируется только если тикет завершен
-            const messageInput = document.getElementById('messageInput');
-            const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
-            const attachFileBtn = document.getElementById('attachFileBtn');
-            
-            if (messageInput && submitButton) {
-                const isCompleted = currentTicket.status === 'completed';
-                messageInput.disabled = isCompleted;
-                submitButton.disabled = isCompleted;
-                if (attachFileBtn) {
-                    attachFileBtn.style.display = isCompleted ? 'none' : 'flex';
-                }
-                
-                messageInput.placeholder = isCompleted ? 
-                    'Тикет завершён' : 
-                    'Введите сообщение...';
+        const ticketResponse = await fetch(`/api/tickets/${ticketId}`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'
             }
-        }
+        });
+        
+        if (!ticketResponse.ok) throw new Error('Ошибка получения данных тикета');
+        const ticketInfo = await ticketResponse.json();
+
+        const messagesResponse = await fetch(`/api/chats/${ticketId}`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!messagesResponse.ok) throw new Error('Ошибка получения сообщений');
+        const messages = await messagesResponse.json();
+        
+        const participantsResponse = await fetch(`/api/tickets/${ticketId}/participants`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!participantsResponse.ok) throw new Error('Ошибка получения участников');
+        const participants = await participantsResponse.json();
+        
+        chatMessages.innerHTML = '';
+        
+        messages.forEach(msg => {
+            const messageDiv = document.createElement('div');
+            const isSent = msg.sender_id === currentUser.id;
+            let senderRole = 'Собеседник';
+            let messageClass = 'received';
+            
+            // Определяем роль и класс сообщения
+            if (isSent) {
+                senderRole = 'Вы';
+                messageClass = 'sent';
+            } else {
+                // Если текущий пользователь сотрудник поддержки
+                if (currentUser.role === 'support') {
+                    const sender = participants.find(p => p.id === msg.sender_id);
+                    if (sender && sender.role === 'admin') {
+                        senderRole = 'Админ';
+                        messageClass = 'received admin-message';
+                    }
+                } else if (currentUser.role === 'admin') {
+                    const sender = participants.find(p => p.id === msg.sender_id);
+                    if (sender) {
+                        if (sender.id === ticketInfo.user_id) {
+                            senderRole = 'Клиент';
+                            messageClass = 'received client-message';
+                        } else if (sender.id === ticketInfo.support_id) {
+                            senderRole = 'Сотрудник';
+                            messageClass = 'received support-message';
+                        } else if (sender.role === 'admin') {
+                            senderRole = 'Админ';
+                            messageClass = 'sent admin-message';
+                        }
+                    }
+                }
+            }
+            
+            messageDiv.className = `message ${messageClass}`;
+            
+            const fileMatch = msg.message.match(/\[FILE\](.*?)\[\/FILE\]/);
+            if (fileMatch) {
+                const fileUrl = fileMatch[1];
+                const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif)$/i);
+                
+                messageDiv.innerHTML = `
+                    <div class="message-info">
+                        <span class="sender-role">${senderRole}</span>
+                        <span class="message-time">${new Date(msg.created_at).toLocaleString()}</span>
+                    </div>
+                    ${isImage 
+                        ? `<img src="${fileUrl}" alt="Изображение" onclick="window.open('${fileUrl}', '_blank')">`
+                        : `<video controls><source src="${fileUrl}" type="video/mp4"></video>`
+                    }
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-info">
+                        <span class="sender-role">${senderRole}</span>
+                        <span class="message-time">${new Date(msg.created_at).toLocaleString()}</span>
+                    </div>
+                    <p>${msg.message}</p>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+        });
+        
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     } catch (error) {
         console.error('Ошибка загрузки чата:', error);
     }
@@ -266,11 +274,14 @@ if (attachFileBtn && fileInput) {
             }
             
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            showSection(user.role === 'support' ? elements.supportDashboard : elements.ticketList);
-            
-            if (user.role === 'support') {
+            if (user.role === 'admin') {
+                showSection(elements.adminDashboard);
+                document.getElementById('showAllTickets')?.click();
+            } else if (user.role === 'support') {
+                showSection(elements.supportDashboard);
                 window.loadSupportTickets('new');
             } else {
+                showSection(elements.ticketList);
                 window.loadTicketList();
             }
         });

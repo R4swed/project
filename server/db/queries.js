@@ -9,6 +9,27 @@ export const queries = {
         return result.rows[0];
     },
 
+    async getAllSupportStaff() {
+        const query = `
+            SELECT id, email, role, created_at
+            FROM users 
+            WHERE role = 'support'
+            ORDER BY created_at DESC
+        `;
+        const result = await pool.query(query);
+        return result.rows;
+    },
+
+    async getAllUsers() {
+        const query = `
+            SELECT id, email, role, created_at
+            FROM users
+            ORDER BY created_at DESC
+        `;
+        const result = await pool.query(query);
+        return result.rows;
+    },
+
     async getUserByEmail(email) {
         const result = await pool.query('SELECT id, email, password_hash, role FROM users WHERE email = $1', [email]);
         return result.rows[0] || null;
@@ -43,6 +64,18 @@ export const queries = {
         `;
         const result = await pool.query(query, [ticketId]);
         return result.rows[0];
+    },
+
+    async getAllTickets() {
+        const query = `
+            SELECT t.*, u.email as user_email, s.email as support_email 
+            FROM tickets t
+            LEFT JOIN users u ON t.user_id = u.id
+            LEFT JOIN users s ON t.support_id = s.id
+            ORDER BY t.created_at DESC
+        `;
+        const result = await pool.query(query);
+        return result.rows;
     },
 
     async getUserById(userId) {
@@ -130,5 +163,17 @@ export const queries = {
             [ticketId, senderId, message]
         );
         return result.rows[0];
+    },
+
+    async getTicketParticipants(ticketId) {
+        const query = `
+            SELECT DISTINCT u.id, u.email, u.role
+            FROM users u
+            LEFT JOIN tickets t ON t.user_id = u.id OR t.support_id = u.id
+            LEFT JOIN chats c ON c.sender_id = u.id
+            WHERE t.id = $1 OR c.ticket_id = $1
+        `;
+        const result = await pool.query(query, [ticketId]);
+        return result.rows;
     }
 };

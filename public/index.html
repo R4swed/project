@@ -140,6 +140,33 @@
         </div>
     </div>
 
+<div id="adminDashboard" class="hidden">
+    <div class="header">
+        <span id="adminUserEmail"></span>
+        <button id="adminLogoutBtn">Выйти</button>
+    </div>
+    <h2>Панель администратора</h2>
+    <div class="filter-buttons">
+        <button id="showAllTickets">Все тикеты</button>
+        <button id="showAllStaff">Сотрудники</button>
+        <button id="showAllUsers">Пользователи</button>
+    </div>
+    <div id="adminContent">
+        <div id="allTicketsContainer">
+            <h3>Все тикеты</h3>
+            <div id="adminTicketsList"></div>
+        </div>
+        <div id="allStaffContainer" class="hidden">
+            <h3>Сотрудники поддержки</h3>
+            <div id="staffList"></div>
+        </div>
+        <div id="allUsersContainer" class="hidden">
+            <h3>Все пользователи</h3>
+            <div id="usersList"></div>
+        </div>
+    </div>
+</div>
+
     <script type="module" src="/js/utils.js"></script>
     <script type="module" src="/js/api.js"></script>
     <script type="module" src="/js/auth.js"></script>

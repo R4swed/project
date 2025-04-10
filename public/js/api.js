@@ -50,6 +50,45 @@ export const api = {
         return response.json();
     },
 
+    async getAllTickets() {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/tickets/admin/all?' + new Date().getTime(), {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        if (!response.ok) throw new Error('Ошибка получения тикетов');
+        return response.json();
+    },
+    
+    async getAllStaff() {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/tickets/admin/staff?' + new Date().getTime(), {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        if (!response.ok) throw new Error('Ошибка получения списка сотрудников');
+        return response.json();
+    },
+
+    async getAllUsers() {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/tickets/admin/users?' + new Date().getTime(), {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        if (!response.ok) throw new Error('Ошибка получения списка пользователей');
+        return response.json();
+    },
+    
     async createTicket(ticketData) {
         const token = localStorage.getItem('token');
         const response = await fetch('/api/tickets', {

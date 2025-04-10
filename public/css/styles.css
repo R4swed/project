@@ -215,8 +215,33 @@ button:active {
     line-height: 1.5;
 }
 
+.message.admin-message p {
+    background-color: #818cf8;
+    color: white;
+}
+
+.message.client-message p {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.message.support-message p {
+    background-color: #22c55e;
+    color: white;
+}
+
 .message.sent {
     margin-left: auto;
+}
+
+.message .sender-role {
+    font-weight: 500;
+    margin-right: 8px;
+}
+
+.message .message-time {
+    font-size: 0.75rem;
+    color: #64748b;
 }
 
 .message.sent p {
@@ -232,9 +257,10 @@ button:active {
 }
 
 .message-info {
-    font-size: 0.75rem;
-    color: #64748b;
-    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
 }
 
 .message img, 
@@ -259,6 +285,29 @@ button:active {
 
 .message img:hover {
     transform: scale(1.02);
+}
+
+.sender-role {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
+.admin-message .sender-role {
+    background-color: #818cf8;
+    color: white;
+}
+
+.client-message .sender-role {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.support-message .sender-role {
+    background-color: #22c55e;
+    color: white;
 }
 
 #attachFileBtn {
@@ -346,6 +395,112 @@ button:active {
 
 #takeTicketBtn:hover {
     background-color: #16a34a;
+}
+
+/* Админ панель */
+
+#adminDashboard {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+#adminDashboard .filter-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+#adminDashboard .filter-buttons button {
+    flex: 1;
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+#adminDashboard .filter-buttons button:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+#adminDashboard .filter-buttons button.active {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Стили для списков */
+.staff-item,
+.user-item,
+#adminTicketsList .ticket-item {
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background-color: white;
+    transition: all 0.2s ease;
+}
+
+#adminTicketsList .ticket-item {
+    cursor: pointer;
+}
+
+#adminTicketsList .ticket-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.staff-item p,
+.user-item p,
+#adminTicketsList .ticket-item p {
+    margin: 0.5rem 0;
+    color: #475569;
+}
+
+.staff-item strong,
+.user-item strong,
+#adminTicketsList .ticket-item strong {
+    color: #1e293b;
+}
+
+/* Стили для контейнеров */
+#adminContent > div {
+    display: none;
+}
+
+#adminContent > div:not(.hidden) {
+    display: block;
+}
+
+/* Стили для заголовков */
+#adminDashboard h2 {
+    font-size: 1.75rem;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+#adminDashboard h3 {
+    font-size: 1.25rem;
+    color: #334155;
+    margin-bottom: 1rem;
+}
+
+/* Стили для кнопки выхода */
+#adminLogoutBtn {
+    background-color: #ef4444;
+    color: white;
+}
+
+#adminLogoutBtn:hover {
+    background-color: #dc2626;
 }
 
 /* Адаптивность */

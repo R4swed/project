@@ -22,7 +22,15 @@ export const initAuth = () => {
     
             localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify(response.user));
-            response.user.role === 'support' ? showSupportDashboard() : showTicketListOrForm();
+
+            // Изменяем проверку роли здесь
+            if (response.user.role === 'admin') {
+                window.location.reload(); // Перезагружаем страницу для правильной инициализации
+            } else if (response.user.role === 'support') {
+                showSupportDashboard();
+            } else {
+                showTicketListOrForm();
+            }
         } catch (error) {
             console.error('Ошибка входа:', error);
             alert('Ошибка входа: ' + (error.message || 'Неверный email или пароль'));

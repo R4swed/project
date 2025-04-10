@@ -31,12 +31,20 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Неверный email или пароль' });
         }
         
+        // Убедимся, что отправляем роль в токене и ответе
         const token = jwt.sign(
             { userId: user.id, email: user.email, role: user.role }, 
             process.env.JWT_SECRET || 'your-secret-key'
         );
         
-        res.json({ user, token });
+        // Отправляем только необходимые поля пользователя
+        const userResponse = {
+            id: user.id,
+            email: user.email,
+            role: user.role
+        };
+        
+        res.json({ user: userResponse, token });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Ошибка сервера' });
