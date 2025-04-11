@@ -136,4 +136,30 @@ router.get('/:id/participants', async (req, res) => {
     }
 });
 
+router.get('/admin/analytics', isAdmin, async (req, res) => {
+    try {
+        const { dateFrom, dateTo } = req.query;
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.setHeader('Pragma', 'no-cache');
+        const analytics = await queries.getTicketsAnalytics(dateFrom, dateTo);
+        res.json(analytics);
+    } catch (error) {
+        console.error('Ошибка при получении аналитики:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+});
+
+router.get('/admin/staff-analytics', isAdmin, async (req, res) => {
+    try {
+        const { dateFrom, dateTo } = req.query;
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.setHeader('Pragma', 'no-cache');
+        const analytics = await queries.getStaffAnalytics(dateFrom, dateTo);
+        res.json(analytics);
+    } catch (error) {
+        console.error('Ошибка при получении статистики сотрудников:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+});
+
 export default router;

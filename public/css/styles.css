@@ -363,6 +363,48 @@ button:active {
     color: #1e293b;
 }
 
+/* Стили для фильтров в панели клиента */
+.client-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.client-filters .search-filter {
+    flex: 2;
+    min-width: 200px;
+}
+
+.client-filters .status-filter {
+    flex: 1;
+    min-width: 150px;
+}
+
+.client-filters .date-filter {
+    flex: 2;
+    display: flex;
+    gap: 0.5rem;
+    min-width: 200px;
+}
+
+.client-filters input,
+.client-filters select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: white;
+}
+
+.client-filters input:focus,
+.client-filters select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 /* Хедер */
 .header {
     display: flex;
@@ -395,6 +437,63 @@ button:active {
 
 #takeTicketBtn:hover {
     background-color: #16a34a;
+}
+
+
+
+/* Стили для фильтров в панели сотрудника */
+.support-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.support-filters .search-filter {
+    flex: 2;
+    min-width: 200px;
+}
+
+.support-filters .date-filter {
+    flex: 2;
+    display: flex;
+    gap: 0.5rem;
+    min-width: 200px;
+}
+
+.support-filters input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: white;
+}
+
+.support-filters input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Обновляем стили для кнопок фильтрации */
+#supportDashboard .filter-buttons {
+    margin-bottom: 1.5rem;
+}
+
+#supportDashboard .filter-buttons button {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+#supportDashboard .filter-buttons button:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+#supportDashboard .filter-buttons button.active {
+    background-color: #3b82f6;
+    color: white;
 }
 
 /* Админ панель */
@@ -434,6 +533,207 @@ button:active {
 #adminDashboard .filter-buttons button.active {
     background-color: #3b82f6;
     color: white;
+}
+
+/* Стили для фильтров в админ-панели */
+.admin-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.search-filter {
+    flex: 2;
+    min-width: 200px;
+}
+
+.status-filter {
+    flex: 1;
+    min-width: 150px;
+}
+
+.date-filter {
+    flex: 2;
+    display: flex;
+    gap: 0.5rem;
+    min-width: 200px;
+}
+
+.admin-filters input,
+.admin-filters select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: white;
+}
+
+.admin-filters input:focus,
+.admin-filters select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Стили для панели аналитики */
+.analytics-panel {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.analytics-filters {
+    margin-bottom: 1.5rem;
+}
+
+.analytics-filters .date-filter {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.analytics-filters input {
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    flex: 1;
+}
+
+.analytics-filters button {
+    width: 100%;
+    background-color: #3b82f6;
+    color: white;
+}
+
+
+.analytics-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.analytics-card.new-tickets {
+    border-color: #f87171;
+}
+
+.analytics-card.in-progress-tickets {
+    border-color: #fbbf24;
+}
+
+.analytics-card.completed-tickets {
+    border-color: #34d399;
+}
+
+.analytics-card:hover {
+    transform: translateY(-2px);
+}
+
+.analytics-card h4 {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.analytics-card p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+/* Стили для карточки сотрудника */
+.staff-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
+
+.staff-info {
+    width: 100%;
+}
+
+.staff-info p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.staff-info .text-sm {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.staff-analytics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.staff-stats-filters {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+}
+
+.staff-stats-filters .date-filter {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.staff-stats-filters input {
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    flex: 1;
+}
+
+.staff-stats-filters input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.staff-stats-filters button {
+    width: 100%;
+    background-color: #3b82f6;
+    color: white;
+}
+
+.staff-stats-filters button:hover {
+    background-color: #2563eb;
+}
+
+.analytics-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 6px;
+}
+
+.analytics-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.analytics-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
 }
 
 /* Стили для списков */
@@ -491,6 +791,78 @@ button:active {
     font-size: 1.25rem;
     color: #334155;
     margin-bottom: 1rem;
+}
+
+/* Стили для списка сотрудников */
+.staff-list-item {
+    display: flex;
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.staff-list-item:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для модального окна */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    min-width: 300px;
+    max-width: 600px;
+    width: 90%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.close-modal:hover {
+    color: #1e293b;
+}
+
+/* Обновленные стили для аналитики в модальном окне */
+.modal .staff-analytics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
 }
 
 /* Стили для кнопки выхода */

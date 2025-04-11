@@ -175,5 +175,150 @@ export const queries = {
         `;
         const result = await pool.query(query, [ticketId]);
         return result.rows;
+    },
+
+    async getTicketsAnalytics() {
+        const query = `
+            WITH first_responses AS (
+                SELECT 
+                    t.id as ticket_id,
+                    t.created_at as ticket_created,
+                    MIN(c.created_at) as first_response
+                FROM tickets t
+                LEFT JOIN chats c ON c.ticket_id = t.id 
+                WHERE c.sender_id = t.support_id
+                GROUP BY t.id
+            )
+            SELECT 
+                COUNT(DISTINCT t.id) as total_tickets,
+                COUNT(DISTINCT CASE 
+                    WHEN t.created_at >= CURRENT_DATE 
+                    THEN t.id END) as today_tickets,
+                AVG(
+                    CASE WHEN fr.first_response IS NOT NULL 
+                    THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
+                    END
+                )::INTEGER as avg_response_time
+            FROM tickets t
+            LEFT JOIN first_responses fr ON t.id = fr.ticket_id
+        `;
+        const result = await pool.query(query);
+        return result.rows[0];
+    },
+
+    async getTicketsAnalytics(dateFrom = null, dateTo = null) {
+        const query = `
+            WITH first_responses AS (
+                SELECT 
+                    t.id as ticket_id,
+                    t.created_at as ticket_created,
+                    MIN(c.created_at) as first_response
+                FROM tickets t
+                LEFT JOIN chats c ON c.ticket_id = t.id 
+                WHERE c.sender_id = t.support_id
+                ${dateFrom ? `AND t.created_at >= $1` : ''}
+                ${dateTo ? `AND t.created_at <= ${dateFrom ? '$2' : '$1'}` : ''}
+                GROUP BY t.id
+            )
+            SELECT 
+                COUNT(DISTINCT CASE 
+                    WHEN t.created_at >= CURRENT_DATE 
+                    THEN t.id END) as today_tickets,
+                COUNT(DISTINCT CASE 
+                    WHEN t.status = 'new' 
+                    THEN t.id END) as new_tickets,
+                COUNT(DISTINCT CASE 
+                    WHEN t.status = 'in_progress' 
+                    THEN t.id END) as in_progress_tickets,
+                COUNT(DISTINCT CASE 
+                    WHEN t.status = 'completed' 
+                    THEN t.id END) as completed_tickets,
+                AVG(
+                    CASE WHEN fr.first_response IS NOT NULL 
+                    THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
+                    END
+                )::INTEGER as avg_response_time,
+                ROUND(
+                    COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL THEN t.id END)::FLOAT * 100 / 
+                    NULLIF(COUNT(DISTINCT t.id), 0)
+                ) as response_rate
+            FROM tickets t
+            LEFT JOIN first_responses fr ON t.id = fr.ticket_id
+            WHERE 1=1
+            ${dateFrom ? `AND t.created_at >= $1` : ''}
+            ${dateTo ? `AND t.created_at <= ${dateFrom ? '$2' : '$1'}` : ''}
+        `;
+        
+        const params = [];
+        if (dateFrom) params.push(dateFrom);
+        if (dateTo) params.push(dateTo);
+        
+        const result = await pool.query(query, params);
+        return result.rows[0];
+    },
+
+    async getStaffAnalytics(dateFrom = null, dateTo = null) {
+        const query = `
+            WITH first_responses AS (
+                SELECT 
+                    t.support_id,
+                    t.id as ticket_id,
+                    t.created_at as ticket_created,
+                    MIN(c.created_at) as first_response
+                FROM tickets t
+                LEFT JOIN chats c ON c.ticket_id = t.id 
+                WHERE c.sender_id = t.support_id
+                ${dateFrom ? `AND t.created_at >= $1` : ''}
+                ${dateTo ? `AND t.created_at <= ${dateFrom ? '$2' : '$1'}` : ''}
+                GROUP BY t.id, t.support_id
+            ),
+            support_stats AS (
+                SELECT 
+                    u.id as support_id,
+                    COUNT(DISTINCT t.id) as total_tickets,
+                    COUNT(DISTINCT CASE 
+                        WHEN t.created_at >= CURRENT_DATE 
+                        THEN t.id END) as today_tickets,
+                    COUNT(DISTINCT CASE 
+                        WHEN t.status = 'new' 
+                        THEN t.id END) as new_tickets,
+                    COUNT(DISTINCT CASE 
+                        WHEN t.status = 'in_progress' 
+                        THEN t.id END) as in_progress_tickets,
+                    COUNT(DISTINCT CASE 
+                        WHEN t.status = 'completed' 
+                        THEN t.id END) as completed_tickets,
+                    AVG(
+                        CASE WHEN fr.first_response IS NOT NULL 
+                        THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
+                        END
+                    )::INTEGER as avg_response_time,
+                    ROUND(
+                        COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL THEN t.id END)::FLOAT * 100 / 
+                        NULLIF(COUNT(DISTINCT t.id), 0)
+                    ) as response_rate
+                FROM users u
+                LEFT JOIN tickets t ON t.support_id = u.id
+                LEFT JOIN first_responses fr ON fr.support_id = u.id
+                WHERE u.role = 'support'
+                ${dateFrom ? `AND (t.created_at >= $1 OR t.created_at IS NULL)` : ''}
+                ${dateTo ? `AND (t.created_at <= ${dateFrom ? '$2' : '$1'} OR t.created_at IS NULL)` : ''}
+                GROUP BY u.id
+            )
+            SELECT 
+                ss.*,
+                u.email as email,
+                u.created_at
+            FROM support_stats ss
+            JOIN users u ON u.id = ss.support_id
+            ORDER BY total_tickets DESC;
+        `;
+        
+        const params = [];
+        if (dateFrom) params.push(dateFrom);
+        if (dateTo) params.push(dateTo);
+        
+        const result = await pool.query(query, params);
+        return result.rows;
     }
 };

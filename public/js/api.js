@@ -178,5 +178,49 @@ export const api = {
         });
         if (!response.ok) throw new Error('Ошибка получения тикета');
         return response.json();
+    },
+
+    async getAnalytics(dateFrom = null, dateTo = null) {
+        const token = localStorage.getItem('token');
+        let url = '/api/tickets/admin/analytics';
+        
+        if (dateFrom || dateTo) {
+            const params = new URLSearchParams();
+            if (dateFrom) params.append('dateFrom', dateFrom);
+            if (dateTo) params.append('dateTo', dateTo);
+            url += '?' + params.toString();
+        }
+        
+        const response = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime(), {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        if (!response.ok) throw new Error('Ошибка получения аналитики');
+        return response.json();
+    },
+
+    async getStaffAnalytics(dateFrom = null, dateTo = null) {
+        const token = localStorage.getItem('token');
+        let url = '/api/tickets/admin/staff-analytics';
+        
+        if (dateFrom || dateTo) {
+            const params = new URLSearchParams();
+            if (dateFrom) params.append('dateFrom', dateFrom);
+            if (dateTo) params.append('dateTo', dateTo);
+            url += '?' + params.toString();
+        }
+        
+        const response = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime(), {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        if (!response.ok) throw new Error('Ошибка получения статистики сотрудников');
+        return response.json();
     }
 };
