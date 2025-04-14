@@ -172,41 +172,39 @@
         <span id="adminUserEmail"></span>
         <button id="adminLogoutBtn">Выйти</button>
     </div>
-    <h2>Панель администратора</h2>
-    
-    <!-- Общая статистика -->
-    <div class="analytics-panel">
-        <div class="analytics-filters">
+
+    <div class="admin-dashboard-header">
+        <div class="analytics-section">
             <div class="date-filter">
-                <input type="date" id="analyticsFromDate" placeholder="От">
-                <input type="date" id="analyticsToDate" placeholder="До">
+                <input type="date" id="adminDateFromFilter" placeholder="От">
+                <input type="date" id="adminDateToFilter" placeholder="До">
+                <button id="applyAdminDateFilter">Применить</button>
             </div>
-            <button id="applyAnalyticsFilter">Применить</button>
         </div>
         <div class="analytics-cards">
             <div class="analytics-card">
-                <h4>Заявки за сегодня</h4>
+                <h4>Тикеты за сегодня</h4>
                 <p id="todayTickets">-</p>
+            </div>
+            <div class="analytics-card">
+                <h4>Новые тикеты</h4>
+                <p id="newTickets">-</p>
+            </div>
+            <div class="analytics-card">
+                <h4>В работе</h4>
+                <p id="inProgressTickets">-</p>
+            </div>
+            <div class="analytics-card">
+                <h4>Завершённые</h4>
+                <p id="completedTickets">-</p>
             </div>
             <div class="analytics-card">
                 <h4>Среднее время ответа</h4>
                 <p id="avgResponseTime">-</p>
             </div>
             <div class="analytics-card">
-                <h4>% обработанных заявок</h4>
+                <h4>% ответов</h4>
                 <p id="responseRate">-</p>
-            </div>
-            <div class="analytics-card new-tickets">
-                <h4>Новые</h4>
-                <p id="newTickets">-</p>
-            </div>
-            <div class="analytics-card in-progress-tickets">
-                <h4>В работе</h4>
-                <p id="inProgressTickets">-</p>
-            </div>
-            <div class="analytics-card completed-tickets">
-                <h4>Завершённые</h4>
-                <p id="completedTickets">-</p>
             </div>
         </div>
     </div>
@@ -214,6 +212,7 @@
     <div class="filter-buttons">
         <button id="showAllTickets">Все тикеты</button>
         <button id="showAllStaff">Сотрудники</button>
+        <button id="showAllUsers">Пользователи</button>
     </div>
 
     <div id="adminContent">
@@ -230,10 +229,6 @@
                         <option value="in_progress">В работе</option>
                         <option value="completed">Завершённые</option>
                     </select>
-                </div>
-                <div class="date-filter">
-                    <input type="date" id="dateFromFilter" placeholder="От">
-                    <input type="date" id="dateToFilter" placeholder="До">
                 </div>
             </div>
             <div id="adminTicketsList"></div>

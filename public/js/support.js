@@ -51,7 +51,30 @@ export const loadSupportTickets = async (status) => {
         const tickets = await api.getTickets(status);
         ticketsCache[status] = tickets; // Сохраняем в кэш
         
-        displayTickets(tickets, currentContainer);
+        // Применяем текущие фильтры к новым данным
+        const searchTerm = document.getElementById('supportTicketSearch')?.value.toLowerCase();
+        const dateFromFilter = document.getElementById('supportDateFromFilter')?.value;
+        const dateToFilter = document.getElementById('supportDateToFilter')?.value;
+
+        if (searchTerm || dateFromFilter || dateToFilter) {
+            const filteredTickets = tickets.filter(ticket => {
+                // Поиск по теме и email
+                const matchesSearch = !searchTerm || 
+                    ticket.subject?.toLowerCase().includes(searchTerm) ||
+                    ticket.email?.toLowerCase().includes(searchTerm) ||
+                    ticket.company?.toLowerCase().includes(searchTerm);
+
+                // Фильтр по датам
+                const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
+                const matchesDateFrom = !dateFromFilter || ticketDate >= new Date(dateFromFilter).setHours(0, 0, 0, 0);
+                const matchesDateTo = !dateToFilter || ticketDate <= new Date(dateToFilter).setHours(0, 0, 0, 0);
+
+                return matchesSearch && matchesDateFrom && matchesDateTo;
+            });
+            displayTickets(filteredTickets, currentContainer);
+        } else {
+            displayTickets(tickets, currentContainer);
+        }
     } catch (error) {
         console.error('Ошибка в loadSupportTickets:', error);
     }
@@ -64,7 +87,7 @@ const displayTickets = (tickets, container) => {
     }
 
     container.innerHTML = tickets.map(ticket => `
-        <div class="ticket-item" data-ticket-id="${ticket.id}">
+        <div class="ticket-item" data-ticket-id="${ticket.id}" data-ticket-status="${ticket.status}">
             <p><strong>Тема:</strong> ${ticket.subject || 'Нет темы'}</p>
             <p><strong>Компания:</strong> ${ticket.company || 'Не указана'}</p>
             <p><strong>Email:</strong> ${ticket.email}</p>
@@ -82,7 +105,7 @@ const displayTickets = (tickets, container) => {
             // Показываем кнопку только для новых тикетов
             const takeTicketBtn = document.getElementById('takeTicketBtn');
             if (takeTicketBtn) {
-                takeTicketBtn.classList.toggle('hidden', ticket.status !== 'new');
+                takeTicketBtn.classList.toggle('hidden', item.dataset.ticketStatus !== 'new');
             }
             
             window.loadChatMessages(item.dataset.ticketId);

@@ -104,6 +104,15 @@ if (attachFileBtn && fileInput) {
     });
 }
 
+const canSendMessage = (userRole, ticketStatus) => {
+    // Клиент может писать во все тикеты, кроме завершенных
+    if (userRole === 'client' || userRole === 'user') {
+        return ticketStatus !== 'completed';
+    }
+    // Админ или сотрудник может писать только в тикеты "в работе"
+    return ticketStatus === 'in_progress';
+};
+
 const loadChatMessages = async (ticketId) => {
     socket.emit('join-ticket', ticketId);
     const chatMessages = document.getElementById('chatMessages');
@@ -219,6 +228,37 @@ const loadChatMessages = async (ticketId) => {
             
             chatMessages.appendChild(messageDiv);
         });
+
+        // Обновляем состояние формы отправки сообщений
+        const messageInput = document.getElementById('messageInput');
+        const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
+        const attachFileBtn = document.getElementById('attachFileBtn');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const canSend = canSendMessage(user.role, ticketInfo.status);
+        
+        if (messageInput && submitButton) {
+            messageInput.disabled = !canSend;
+            submitButton.disabled = !canSend;
+            if (attachFileBtn) {
+                attachFileBtn.disabled = !canSend;
+                attachFileBtn.style.opacity = canSend ? '1' : '0.5';
+                attachFileBtn.style.cursor = canSend ? 'pointer' : 'not-allowed';
+            }
+            
+            if (canSend) {
+                messageInput.placeholder = 'Введите сообщение...';
+            } else if (ticketInfo.status === 'completed') {
+                messageInput.placeholder = 'Тикет завершён';
+            } else if (ticketInfo.status === 'new') {
+                // Показываем разные сообщения для клиента и сотрудников
+                messageInput.placeholder = (user.role === 'client' || user.role === 'user') ? 
+                    'Введите сообщение...' : 
+                    'Возьмите тикет в работу, чтобы начать переписку';
+            } else {
+                messageInput.placeholder = 'Отправка сообщений недоступна';
+            }
+        }
         
         chatMessages.scrollTop = chatMessages.scrollHeight;
     } catch (error) {
