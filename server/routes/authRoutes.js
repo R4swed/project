@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { queries } from '../db/queries.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
@@ -31,13 +32,11 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Неверный email или пароль' });
         }
         
-        // Убедимся, что отправляем роль в токене и ответе
         const token = jwt.sign(
             { userId: user.id, email: user.email, role: user.role }, 
             process.env.JWT_SECRET || 'your-secret-key'
         );
         
-        // Отправляем только необходимые поля пользователя
         const userResponse = {
             id: user.id,
             email: user.email,

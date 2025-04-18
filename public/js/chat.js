@@ -1,5 +1,6 @@
 import { showSection, elements } from './utils.js';
 import { api } from './api.js';
+import { currentTicketStatus } from './support.js';
 
 let socket;
 
@@ -13,16 +14,13 @@ export const initChat = () => {
         });
     
         socket.on('connect', () => {
-            // Убираем лишние логи
             console.log('Connected');
         });
     
         socket.on('connect_error', () => {
-            // Убираем подробности ошибок
             console.warn('Connection error');
         });
 
-        // Обработчик нового сообщения
         socket.on('new-message', (ticketId) => {
             const currentTicketId = document.getElementById('ticketId')?.textContent;
             if (currentTicketId === ticketId) {
@@ -30,7 +28,6 @@ export const initChat = () => {
             }
         });
 
-        // Обработчик обновления статуса тикета
         socket.on('ticket-updated', (ticketId) => {
             const currentTicketId = document.getElementById('ticketId')?.textContent;
             if (currentTicketId === ticketId) {
@@ -39,29 +36,41 @@ export const initChat = () => {
         });
     }
 
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
+                if (submitButton && !submitButton.disabled) {
+                    submitButton.click();
+                }
+            }
+        });
+    }
+
     const messageForm = document.getElementById('messageForm');
     const newMessageForm = messageForm?.cloneNode(true);
     if (messageForm && newMessageForm) {
         messageForm.parentNode.replaceChild(newMessageForm, messageForm);
+        
+        const newMessageInput = newMessageForm.querySelector('#messageInput');
+        if (newMessageInput) {
+            newMessageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const submitButton = newMessageForm.querySelector('button[type="submit"]');
+                    if (submitButton && !submitButton.disabled) {
+                        submitButton.click();
+                    }
+                }
+            });
+        }
     }
 
-    const updateFormState = (status) => {
-        const messageInput = document.getElementById('messageInput');
-        const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
-        const isDisabled = status === 'new' || status === 'completed';
-        
-        if (messageInput && submitButton) {
-            messageInput.disabled = isDisabled;
-            submitButton.disabled = isDisabled;
-            
-            messageInput.placeholder = isDisabled ? 
-                (status === 'new' ? 'Возьмите тикет в работу, чтобы начать переписку' : 'Тикет завершён') : 
-                'Введите сообщение...';
-        }
-    };
 
     const attachFileBtn = document.getElementById('attachFileBtn');
-const fileInput = document.getElementById('fileInput');
+    const fileInput = document.getElementById('fileInput');
 
 if (attachFileBtn && fileInput) {
     attachFileBtn.addEventListener('click', () => {
@@ -105,11 +114,9 @@ if (attachFileBtn && fileInput) {
 }
 
 const canSendMessage = (userRole, ticketStatus) => {
-    // Клиент может писать во все тикеты, кроме завершенных
     if (userRole === 'client' || userRole === 'user') {
         return ticketStatus !== 'completed';
     }
-    // Админ или сотрудник может писать только в тикеты "в работе"
     return ticketStatus === 'in_progress';
 };
 
@@ -140,7 +147,6 @@ const loadChatMessages = async (ticketId) => {
         });
         
         if (!ticketResponse.ok) throw new Error('Ошибка получения данных тикета');
-        const ticketInfo = await ticketResponse.json();
 
         const messagesResponse = await fetch(`/api/chats/${ticketId}`, {
             headers: { 
@@ -148,7 +154,23 @@ const loadChatMessages = async (ticketId) => {
                 'Cache-Control': 'no-cache'
             }
         });
-        
+
+        const ticketInfo = await ticketResponse.json();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        const takeTicketBtn = document.getElementById('takeTicketBtn');
+        const completeTicketBtn = document.getElementById('completeTicketBtn');
+
+        if (takeTicketBtn && completeTicketBtn) {
+            if (user.role === 'user' || user.role === 'client') {
+                takeTicketBtn.classList.add('hidden');
+                completeTicketBtn.classList.add('hidden');
+            } else {
+                takeTicketBtn.classList.toggle('hidden', ticketInfo.status !== 'new');
+                completeTicketBtn.classList.toggle('hidden', ticketInfo.status !== 'in_progress');
+            }
+        }
+
         if (!messagesResponse.ok) throw new Error('Ошибка получения сообщений');
         const messages = await messagesResponse.json();
         
@@ -170,12 +192,10 @@ const loadChatMessages = async (ticketId) => {
             let senderRole = 'Собеседник';
             let messageClass = 'received';
             
-            // Определяем роль и класс сообщения
             if (isSent) {
                 senderRole = 'Вы';
                 messageClass = 'sent';
             } else {
-                // Если текущий пользователь сотрудник поддержки
                 if (currentUser.role === 'support') {
                     const sender = participants.find(p => p.id === msg.sender_id);
                     if (sender && sender.role === 'admin') {
@@ -229,11 +249,9 @@ const loadChatMessages = async (ticketId) => {
             chatMessages.appendChild(messageDiv);
         });
 
-        // Обновляем состояние формы отправки сообщений
         const messageInput = document.getElementById('messageInput');
         const submitButton = document.getElementById('messageForm')?.querySelector('button[type="submit"]');
         const attachFileBtn = document.getElementById('attachFileBtn');
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
         
         const canSend = canSendMessage(user.role, ticketInfo.status);
         
@@ -251,7 +269,6 @@ const loadChatMessages = async (ticketId) => {
             } else if (ticketInfo.status === 'completed') {
                 messageInput.placeholder = 'Тикет завершён';
             } else if (ticketInfo.status === 'new') {
-                // Показываем разные сообщения для клиента и сотрудников
                 messageInput.placeholder = (user.role === 'client' || user.role === 'user') ? 
                     'Введите сообщение...' : 
                     'Возьмите тикет в работу, чтобы начать переписку';
@@ -301,7 +318,6 @@ const loadChatMessages = async (ticketId) => {
         });
     }
 
-    // Кнопка "Назад"
     const backButton = document.getElementById('backBtn');
     if (backButton) {
         const newBackButton = backButton.cloneNode(true);
@@ -319,7 +335,7 @@ const loadChatMessages = async (ticketId) => {
                 document.getElementById('showAllTickets')?.click();
             } else if (user.role === 'support') {
                 showSection(elements.supportDashboard);
-                window.loadSupportTickets('new');
+                window.loadSupportTickets(currentTicketStatus);
             } else {
                 showSection(elements.ticketList);
                 window.loadTicketList();
@@ -327,7 +343,6 @@ const loadChatMessages = async (ticketId) => {
         });
     }
 
-    // Кнопка "Взять в работу"
     const takeTicketBtn = document.getElementById('takeTicketBtn');
     if (takeTicketBtn) {
         const newTakeTicketBtn = takeTicketBtn.cloneNode(true);
@@ -351,7 +366,6 @@ const loadChatMessages = async (ticketId) => {
         });
     }
 
-    // Кнопка "Завершить тикет"
     const completeTicketBtn = document.getElementById('completeTicketBtn');
     if (completeTicketBtn) {
         const newCompleteTicketBtn = completeTicketBtn.cloneNode(true);

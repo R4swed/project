@@ -13,14 +13,18 @@ const isAdmin = (req, res, next) => {
 
 router.get('/', async (req, res) => {
     try {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
         let tickets;
         if (req.user.role === 'support') {
-            if (req.query.filter === 'new') {
+            const filter = req.query.filter;
+            
+            if (filter === 'new') {
                 tickets = await queries.getAllNewTickets();
-            } else if (req.query.filter === 'completed') {
-                tickets = await queries.getSupportTicketsByStatus(req.user.userId, 'completed');
-            } else if (req.query.filter === 'in_progress') {
-                tickets = await queries.getSupportTicketsByStatus(req.user.userId, 'in_progress');
+            } else if (filter === 'completed' || filter === 'in_progress') {
+                tickets = await queries.getSupportTicketsByStatus(req.user.userId, filter);
             } else {
                 tickets = await queries.getSupportTickets(req.user.userId);
             }
@@ -52,13 +56,30 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { company, email, product, subject, description } = req.body;
+        const { company, email, product, subject, description} = req.body;
         const userId = req.user.userId;
+
+        if (!company || !email || !subject || !description) {
+            return res.status(400).json({ error: 'Все поля обязательны для заполнения' });
+        }
+
         const ticket = await queries.createTicket({
-            company, email, product, subject, description, userId
+            company,
+            email,
+            product,
+            subject,
+            description,
+            userId
         });
-        res.json(ticket);
+
+        const fullTicket = await queries.getTicketById(ticket.id);
+
+        const io = getIO();
+        io.emit('ticket-created', fullTicket);
+
+        res.json(fullTicket);
     } catch (error) {
+        console.error('Create ticket error:', error);
         res.status(500).json({ error: 'Ошибка создания тикета' });
     }
 });
@@ -71,7 +92,6 @@ router.patch('/:id/status', async (req, res) => {
         
         const ticket = await queries.updateTicketStatus(id, status, supportId);
         
-        // Добавляем эмит события
         const io = getIO();
         io.to(`ticket-${id}`).emit('ticket-updated', id);
         
@@ -127,7 +147,6 @@ router.get('/:id/participants', async (req, res) => {
             return res.status(404).json({ error: 'Тикет не найден' });
         }
 
-        // Получаем информацию о всех участниках чата
         const participants = await queries.getTicketParticipants(id);
         res.json(participants);
     } catch (error) {
@@ -161,5 +180,6 @@ router.get('/admin/staff-analytics', isAdmin, async (req, res) => {
         res.status(500).json({ error: 'Внутренняя ошибка сервера' });
     }
 });
+
 
 export default router;

@@ -7,18 +7,16 @@ import { getIO } from '../index.js';
 
 const router = express.Router();
 
-// Настройка Cloudinary
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Настройка multer для хранения в памяти
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    limits: { fileSize: 10 * 1024 * 1024 }, 
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
         if (allowedTypes.includes(file.mimetype)) {
@@ -29,7 +27,6 @@ const upload = multer({
     }
 });
 
-// Функция для загрузки файла в Cloudinary
 const uploadToCloudinary = async (buffer, options = {}) => {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -67,7 +64,7 @@ router.post('/', async (req, res) => {
         const newMessage = await queries.createChatMessage(ticket_id, senderId, message);
         
         const io = getIO();
-        io.to(`ticket-${ticket_id}`).emit('new-message', ticket_id); // Изменили payload
+        io.to(`ticket-${ticket_id}`).emit('new-message', ticket_id); 
         
         res.json(newMessage);
     } catch (error) {
@@ -93,7 +90,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         );
 
         const io = getIO();
-        io.to(`ticket-${ticket_id}`).emit('new-message', ticket_id); // Изменили payload
+        io.to(`ticket-${ticket_id}`).emit('new-message', ticket_id); 
 
         res.json({ message, fileUrl: result.secure_url });
     } catch (error) {

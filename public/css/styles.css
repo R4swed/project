@@ -1,4 +1,3 @@
-/* Базовые стили */
 * {
     margin: 0;
     padding: 0;
@@ -21,8 +20,7 @@ body {
     display: none !important;
 }
 
-/* Контейнеры */
-#loginForm, #registerForm, #ticketForm, #ticketList, #chatContainer, #supportDashboard {
+#loginForm, #registerForm, #ticketForm, #ticketList, #chatContainer, #supportDashboard, #adminDashboard {
     background: white;
     padding: 2rem;
     border-radius: 12px;
@@ -32,7 +30,6 @@ body {
     margin: 20px auto;
 }
 
-/* Стили для ссылок на страницах авторизации */
 #loginForm p, #registerForm p {
     text-align: center;
     margin-top: 1.5rem;
@@ -52,7 +49,6 @@ body {
     text-decoration: underline;
 }
 
-/* Заголовки */
 h2 {
     font-size: 1.75rem;
     color: #1e293b;
@@ -67,7 +63,6 @@ h3 {
     font-weight: 500;
 }
 
-/* Формы */
 form {
     display: flex;
     flex-direction: column;
@@ -80,14 +75,12 @@ form {
     gap: 0.5rem;
 }
 
-/* Метки */
 label {
     font-size: 0.875rem;
     color: #475569;
     font-weight: 500;
 }
 
-/* Поля ввода */
 input, select, textarea {
     padding: 0.75rem 1rem;
     border: 1px solid #e2e8f0;
@@ -122,7 +115,6 @@ textarea:disabled::placeholder {
     color: #94a3b8;
 }
 
-/* Кнопки */
 button {
     padding: 0.75rem 1.5rem;
     border: none;
@@ -165,7 +157,6 @@ button:active {
     border-color: #3b82f6;
 }
 
-/* Фильтры тикетов */
 .filter-buttons {
     display: flex;
     gap: 1rem;
@@ -193,7 +184,6 @@ button:active {
     background-color: #4f46e5;
 }
 
-/* Чат */
 .chat-messages {
     max-height: 500px;
     overflow-y: auto;
@@ -337,7 +327,6 @@ button:active {
     gap: 0.75rem;
 }
 
-/* Список тикетов */
 .ticket-item {
     padding: 1.25rem;
     border: 1px solid #e2e8f0;
@@ -363,7 +352,6 @@ button:active {
     color: #1e293b;
 }
 
-/* Стили для фильтров в панели клиента */
 .client-filters {
     display: flex;
     gap: 1rem;
@@ -405,7 +393,6 @@ button:active {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Хедер */
 .header {
     display: flex;
     justify-content: space-between;
@@ -420,7 +407,6 @@ button:active {
     color: #475569;
 }
 
-/* Кнопки действий */
 #logoutBtn, #ticketListLogoutBtn, #supportLogoutBtn {
     background-color: #ef4444;
 }
@@ -439,9 +425,6 @@ button:active {
     background-color: #16a34a;
 }
 
-
-
-/* Стили для фильтров в панели сотрудника */
 .support-filters {
     display: flex;
     gap: 1rem;
@@ -476,7 +459,6 @@ button:active {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Обновляем стили для кнопок фильтрации */
 #supportDashboard .filter-buttons {
     margin-bottom: 1.5rem;
 }
@@ -495,8 +477,6 @@ button:active {
     background-color: #3b82f6;
     color: white;
 }
-
-/* Админ панель */
 
 #adminDashboard {
     background: white;
@@ -535,7 +515,6 @@ button:active {
     color: white;
 }
 
-/* Стили для фильтров в админ-панели */
 .admin-filters {
     display: flex;
     gap: 1rem;
@@ -577,7 +556,6 @@ button:active {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Стили для панели аналитики */
 .analytics-panel {
     background-color: #f8fafc;
     border-radius: 8px;
@@ -608,7 +586,6 @@ button:active {
     background-color: #3b82f6;
     color: white;
 }
-
 
 .analytics-cards {
     display: grid;
@@ -645,7 +622,7 @@ button:active {
     justify-content: center;
     gap: 0.5rem;
 }
-/* Стили для карточки сотрудника */
+
 .staff-item {
     display: flex;
     flex-direction: column;
@@ -736,7 +713,6 @@ button:active {
     color: #1e293b;
 }
 
-/* Стили для списков */
 .staff-item,
 .user-item,
 #adminTicketsList .ticket-item {
@@ -771,7 +747,6 @@ button:active {
     color: #1e293b;
 }
 
-/* Стили для контейнеров */
 #adminContent > div {
     display: none;
 }
@@ -780,7 +755,6 @@ button:active {
     display: block;
 }
 
-/* Стили для заголовков */
 #adminDashboard h2 {
     font-size: 1.75rem;
     color: #1e293b;
@@ -793,7 +767,6 @@ button:active {
     margin-bottom: 1rem;
 }
 
-/* Стили для списка сотрудников */
 .staff-list-item {
     display: flex;
     padding: 1rem;
@@ -811,7 +784,6 @@ button:active {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Стили для модального окна */
 .modal {
     position: fixed;
     top: 0;
@@ -858,14 +830,12 @@ button:active {
     color: #1e293b;
 }
 
-/* Обновленные стили для аналитики в модальном окне */
 .modal .staff-analytics {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
 }
 
-/* Стили для кнопки выхода */
 #adminLogoutBtn {
     background-color: #ef4444;
     color: white;
@@ -875,7 +845,6 @@ button:active {
     background-color: #dc2626;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
     body {
         padding: 1rem;
@@ -893,9 +862,12 @@ button:active {
     .message video {
         max-width: 100%;
     }
+
+    .category-filter {
+        min-width: 100%;
+    }
 }
 
-/* Скроллбар */
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -912,4 +884,134 @@ button:active {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+.auth-link-text {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.auth-link-text a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.auth-link-text a:hover {
+    text-decoration: underline;
+}
+
+.reset-password-link {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.reset-password-link:hover {
+    text-decoration: underline;
+}
+
+#resetPasswordForm {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+#resetPasswordForm h2 {
+    text-align: center;
+    color: #1e293b;
+    margin-bottom: 20px;
+}
+
+#resetPasswordForm .form-group {
+    margin-bottom: 15px;
+}
+
+#resetPasswordForm label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+#resetPasswordForm input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#resetPasswordForm button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#resetPasswordForm button:hover {
+    background-color: #0056b3;
+}
+
+#resetPasswordConfirmForm .form-group + .form-group {
+    margin-top: 15px;
+}
+
+#resetPasswordConfirmForm .password-requirements {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 8px 0;
+    padding: 8px;
+    background-color: #f8fafc;
+    border-radius: 4px;
+}
+
+.password-match-indicator {
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+.password-match-indicator.match {
+    color: #22c55e;
+}
+
+.password-match-indicator.no-match {
+    color: #ef4444;
+}
+
+.category-filter {
+    flex: 1;
+    min-width: 200px;
+}
+
+.category-filter select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: white;
+    color: #475569;
+}
+
+.category-filter select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.client-filters,
+.support-filters,
+.admin-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }

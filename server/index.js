@@ -1,5 +1,3 @@
-// Удаляем экспорт по умолчанию для Vercel
-// Оставляем только основной код сервера
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -16,17 +14,14 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
-// Базовые middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(join(dirname(fileURLToPath(import.meta.url)), '../public')));
 
-// API маршруты
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', authMiddleware, ticketRoutes);
 app.use('/api/chats', authMiddleware, chatRoutes);
 
-// Инициализация Socket.IO
 const io = new Server(httpServer, {
     cors: {
         origin: "*",
@@ -42,7 +37,6 @@ io.on('connection', socket => {
 
 export const getIO = () => io;
 
-// Запуск сервера
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

@@ -63,8 +63,15 @@
                 <label for="product">Продукт:</label>
                 <select id="product">
                     <option value="" disabled selected>Выберите продукт</option>
-                    <option value="product1">Продукт 1</option>
-                    <option value="product2">Продукт 2</option>
+                    <option value="product1">Курсор</option>
+                    <option value="product2">FaceGate</option>
+                    <option value="product3">Комплексная система диспетчерского контроля и мониторинга промышленного оборудования</option>
+                    <option value="product4">Шкафы автоматики и щиты управления</option>
+                    <option value="product5">Протокол</option>
+                    <option value="product6">AutoGate</option>
+                    <option value="product7">Система вибромониторинга насосного оборудования</option>
+                    <option value="product8">Система мониторинга физиологических параметров операторов</option>
+                    <option value="product9">Другое</option>
                 </select>
             </div>
             <div class="form-group">
@@ -102,6 +109,7 @@
                 <option value="completed">Завершённые</option>
             </select>
         </div>
+
         <div class="date-filter">
             <input type="date" id="clientDateFromFilter" placeholder="От">
             <input type="date" id="clientDateToFilter" placeholder="До">
@@ -166,7 +174,6 @@
     </div>
 </div>
 
-<!-- Секция админ-панели -->
 <div id="adminDashboard" class="hidden">
     <div class="header">
         <span id="adminUserEmail"></span>
@@ -187,18 +194,6 @@
                 <p id="todayTickets">-</p>
             </div>
             <div class="analytics-card">
-                <h4>Новые тикеты</h4>
-                <p id="newTickets">-</p>
-            </div>
-            <div class="analytics-card">
-                <h4>В работе</h4>
-                <p id="inProgressTickets">-</p>
-            </div>
-            <div class="analytics-card">
-                <h4>Завершённые</h4>
-                <p id="completedTickets">-</p>
-            </div>
-            <div class="analytics-card">
                 <h4>Среднее время ответа</h4>
                 <p id="avgResponseTime">-</p>
             </div>
@@ -212,7 +207,6 @@
     <div class="filter-buttons">
         <button id="showAllTickets">Все тикеты</button>
         <button id="showAllStaff">Сотрудники</button>
-        <button id="showAllUsers">Пользователи</button>
     </div>
 
     <div id="adminContent">
@@ -233,11 +227,10 @@
             </div>
             <div id="adminTicketsList"></div>
         </div>
-        
+
         <div id="allStaffContainer" class="hidden">
             <h3>Сотрудники поддержки</h3>
             <div id="staffList"></div>
-            <!-- Модальное окно статистики -->
             <div id="staffStatsModal" class="modal hidden">
                 <div class="modal-content">
                     <div class="modal-header">

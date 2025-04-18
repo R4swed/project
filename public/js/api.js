@@ -41,10 +41,14 @@ export const api = {
         return response.json();
     },
 
-    async getTickets(filter = '') {
+    async getTickets(status) {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/tickets${filter ? `?filter=${filter}` : ''}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const response = await fetch(`/api/tickets?filter=${status}`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
         });
         if (!response.ok) throw new Error('Ошибка получения тикетов');
         return response.json();
@@ -221,6 +225,32 @@ export const api = {
             }
         });
         if (!response.ok) throw new Error('Ошибка получения статистики сотрудников');
+        return response.json();
+    },
+
+    async requestPasswordReset(email) {
+        const response = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка запроса сброса пароля');
+        }
+        return response.json();
+    },
+
+    async resetPassword(token, newPassword) {
+        const response = await fetch('/api/auth/reset-password/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, newPassword })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка сброса пароля');
+        }
         return response.json();
     }
 };

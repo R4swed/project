@@ -1,4 +1,4 @@
-import { showSection, elements } from './utils.js';
+import { showSection, elements, statusLocales, productLocales} from './utils.js';
 import { api } from './api.js';
 
 let ticketsCache = {
@@ -7,15 +7,11 @@ let ticketsCache = {
     completed: []
 };
 
+export let currentTicketStatus = 'new';
+
 export const showSupportDashboard = () => {
     showSection(elements.supportDashboard);
-    loadSupportTickets('new');
     
-    // Устанавливаем email сотрудника
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    document.getElementById('supportUserEmail').textContent = user.email;
-
-    // Инициализируем начальные даты
     const today = new Date();
     const monthAgo = new Date();
     monthAgo.setMonth(monthAgo.getMonth() - 1);
@@ -28,14 +24,14 @@ export const showSupportDashboard = () => {
         dateToInput.valueAsDate = today;
     }
 
-    // Добавляем обработчики для фильтров
-    document.getElementById('supportTicketSearch')?.addEventListener('input', filterTickets);
-    document.getElementById('supportDateFromFilter')?.addEventListener('change', filterTickets);
-    document.getElementById('supportDateToFilter')?.addEventListener('change', filterTickets);
+    initSupport();
+    loadSupportTickets('new');
 };
+
 
 export const loadSupportTickets = async (status) => {
     try {
+        currentTicketStatus = status;
         ['new', 'in_progress', 'completed'].forEach(s => {
             document.getElementById(`${s}TicketsContainer`)?.classList.add('hidden');
         });
@@ -49,36 +45,53 @@ export const loadSupportTickets = async (status) => {
         containerWrapper.classList.remove('hidden');
         
         const tickets = await api.getTickets(status);
-        ticketsCache[status] = tickets; // Сохраняем в кэш
+        ticketsCache[status] = tickets;
         
-        // Применяем текущие фильтры к новым данным
-        const searchTerm = document.getElementById('supportTicketSearch')?.value.toLowerCase();
-        const dateFromFilter = document.getElementById('supportDateFromFilter')?.value;
-        const dateToFilter = document.getElementById('supportDateToFilter')?.value;
+        const searchTerm = document.getElementById('supportTicketSearch')?.value || '';
+        const dateFrom = document.getElementById('supportDateFromFilter')?.value || '';
+        const dateTo = document.getElementById('supportDateToFilter')?.value || '';
 
-        if (searchTerm || dateFromFilter || dateToFilter) {
-            const filteredTickets = tickets.filter(ticket => {
-                // Поиск по теме и email
-                const matchesSearch = !searchTerm || 
-                    ticket.subject?.toLowerCase().includes(searchTerm) ||
-                    ticket.email?.toLowerCase().includes(searchTerm) ||
-                    ticket.company?.toLowerCase().includes(searchTerm);
+        const filteredTickets = filterTickets(tickets, {
+            search: searchTerm,
+            dateFrom: dateFrom,
+            dateTo: dateTo
+        });
 
-                // Фильтр по датам
-                const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
-                const matchesDateFrom = !dateFromFilter || ticketDate >= new Date(dateFromFilter).setHours(0, 0, 0, 0);
-                const matchesDateTo = !dateToFilter || ticketDate <= new Date(dateToFilter).setHours(0, 0, 0, 0);
-
-                return matchesSearch && matchesDateFrom && matchesDateTo;
-            });
-            displayTickets(filteredTickets, currentContainer);
-        } else {
-            displayTickets(tickets, currentContainer);
-        }
+        displayTickets(filteredTickets, currentContainer);
     } catch (error) {
         console.error('Ошибка в loadSupportTickets:', error);
     }
 };
+
+
+const filterTickets = (tickets, filters) => {    
+    if (!Array.isArray(tickets)) return [];
+    
+    return tickets.filter(ticket => {
+        const matchesSearch = !filters.search || 
+            ticket.subject?.toLowerCase().includes(filters.search.toLowerCase()) ||
+            ticket.email?.toLowerCase().includes(filters.search.toLowerCase()) ||
+            ticket.company?.toLowerCase().includes(filters.search.toLowerCase());
+        
+        const ticketDate = new Date(ticket.created_at);
+        ticketDate.setHours(0, 0, 0, 0);
+        
+        let matchesDateFrom = true;
+        if (filters.dateFrom) {
+            const fromDate = new Date(filters.dateFrom + 'T00:00:00');
+            matchesDateFrom = ticketDate >= fromDate;
+        }
+        
+        let matchesDateTo = true;
+        if (filters.dateTo) {
+            const toDate = new Date(filters.dateTo + 'T23:59:59');
+            matchesDateTo = ticketDate <= toDate;
+        }
+
+        return matchesSearch && matchesDateFrom && matchesDateTo;
+    });
+};
+
 
 const displayTickets = (tickets, container) => {
     if (!tickets.length) {
@@ -86,15 +99,7 @@ const displayTickets = (tickets, container) => {
         return;
     }
 
-    container.innerHTML = tickets.map(ticket => `
-        <div class="ticket-item" data-ticket-id="${ticket.id}" data-ticket-status="${ticket.status}">
-            <p><strong>Тема:</strong> ${ticket.subject || 'Нет темы'}</p>
-            <p><strong>Компания:</strong> ${ticket.company || 'Не указана'}</p>
-            <p><strong>Email:</strong> ${ticket.email}</p>
-            <p><strong>Продукт:</strong> ${ticket.product || 'Не указан'}</p>
-            <p><strong>Создан:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
-        </div>
-    `).join('');
+    container.innerHTML = tickets.map(ticket => renderTicket(ticket).outerHTML).join('');
 
     container.querySelectorAll('.ticket-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -102,7 +107,6 @@ const displayTickets = (tickets, container) => {
             document.querySelector('#chatContainer h2').innerHTML = 
                 `Чат по заявке <span id="ticketId" class="hidden">${item.dataset.ticketId}</span>`;
             
-            // Показываем кнопку только для новых тикетов
             const takeTicketBtn = document.getElementById('takeTicketBtn');
             if (takeTicketBtn) {
                 takeTicketBtn.classList.toggle('hidden', item.dataset.ticketStatus !== 'new');
@@ -113,32 +117,96 @@ const displayTickets = (tickets, container) => {
     });
 };
 
-const filterTickets = () => {
-    const searchTerm = document.getElementById('supportTicketSearch')?.value.toLowerCase();
-    const dateFromFilter = document.getElementById('supportDateFromFilter')?.value;
-    const dateToFilter = document.getElementById('supportDateToFilter')?.value;
+const renderTicket = (ticket) => {
+    const ticketElement = document.createElement('div');
+    ticketElement.className = 'ticket-item';
+    ticketElement.dataset.ticketId = ticket.id;
+    ticketElement.dataset.ticketStatus = ticket.status;
+    ticketElement.innerHTML = `
+        <h3>${ticket.subject}</h3>
+        <p><strong>Компания:</strong> ${ticket.company || 'Не указана'}</p>
+        <p><strong>Email:</strong> ${ticket.email}</p>
+        <p><strong>Продукт:</strong> ${ticket.product ? productLocales[ticket.product] : 'Не указан'}</p>
+        <p><strong>Статус:</strong> ${statusLocales[ticket.status]}</p>
+        <p><strong>Создан:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
+    `;
+    return ticketElement;
+};
 
-    // Определяем текущий активный статус
+export const initSupport = () => {    
+    ticketsCache = {
+        new: [],
+        in_progress: [],
+        completed: []
+    };
+
+    const filters = document.querySelectorAll('#supportTicketSearch, #supportDateFromFilter, #supportDateToFilter');
+    filters.forEach(filter => {
+        if (filter) {
+            if (filter.id === 'supportTicketSearch') {
+                filter.addEventListener('input', handleFilterChange);
+            } 
+            else {
+                filter.addEventListener('change', handleFilterChange);
+            }
+        }
+    });
+
+    const filterButtons = {
+        new: document.getElementById('filterNewTickets'),
+        in_progress: document.getElementById('filterInProgressTickets'),
+        completed: document.getElementById('filterCompletedTickets')
+    };
+
+    const setActiveButton = (status) => {
+        Object.values(filterButtons).forEach(btn => btn?.classList.remove('active'));
+        filterButtons[status]?.classList.add('active');
+    };
+
+    if (filterButtons.new) {
+        filterButtons.new.addEventListener('click', () => {
+            setActiveButton('new');
+            loadSupportTickets('new');
+        });
+    }
+
+    if (filterButtons.in_progress) {
+        filterButtons.in_progress.addEventListener('click', () => {
+            setActiveButton('in_progress');
+            loadSupportTickets('in_progress');
+        });
+    }
+
+    if (filterButtons.completed) {
+        filterButtons.completed.addEventListener('click', () => {
+            setActiveButton('completed');
+            loadSupportTickets('completed');
+        });
+    }
+
+    setActiveButton('new');
+};
+
+const handleFilterChange = () => {    
     const currentStatus = ['new', 'in_progress', 'completed'].find(status => 
-        !document.getElementById(`${status}TicketsContainer`).classList.contains('hidden')
+        !document.getElementById(`${status}TicketsContainer`)?.classList.contains('hidden')
     );
 
-    if (!currentStatus) return;
+    if (!currentStatus) {
+        console.warn('No current status found');
+        return;
+    }
 
-    const tickets = ticketsCache[currentStatus];
-    const filteredTickets = tickets.filter(ticket => {
-        // Поиск по теме и email
-        const matchesSearch = !searchTerm || 
-            ticket.subject?.toLowerCase().includes(searchTerm) ||
-            ticket.email?.toLowerCase().includes(searchTerm) ||
-            ticket.company?.toLowerCase().includes(searchTerm);
+    const searchTerm = document.getElementById('supportTicketSearch')?.value || '';
+    const dateFrom = document.getElementById('supportDateFromFilter')?.value || '';
+    const dateTo = document.getElementById('supportDateToFilter')?.value || '';
 
-        // Фильтр по датам
-        const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
-        const matchesDateFrom = !dateFromFilter || ticketDate >= new Date(dateFromFilter).setHours(0, 0, 0, 0);
-        const matchesDateTo = !dateToFilter || ticketDate <= new Date(dateToFilter).setHours(0, 0, 0, 0);
+    const tickets = ticketsCache[currentStatus] || [];
 
-        return matchesSearch && matchesDateFrom && matchesDateTo;
+    const filteredTickets = filterTickets(tickets, {
+        search: searchTerm,
+        dateFrom: dateFrom,
+        dateTo: dateTo
     });
 
     const containerId = currentStatus === 'in_progress' ? 'inProgressTickets' : `${currentStatus}Tickets`;
@@ -146,12 +214,6 @@ const filterTickets = () => {
     if (container) {
         displayTickets(filteredTickets, container);
     }
-};
-
-export const initSupport = () => {
-    document.getElementById('filterNewTickets')?.addEventListener('click', () => loadSupportTickets('new'));
-    document.getElementById('filterInProgressTickets')?.addEventListener('click', () => loadSupportTickets('in_progress'));
-    document.getElementById('filterCompletedTickets')?.addEventListener('click', () => loadSupportTickets('completed'));
 };
 
 window.loadSupportTickets = loadSupportTickets;

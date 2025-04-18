@@ -113,14 +113,20 @@ export const queries = {
 
     async getSupportTicketsByStatus(supportId, status) {
         const query = `
-            SELECT id, company, email, product, subject, description, 
-                   status, created_at, user_id, support_id
-            FROM tickets 
-            WHERE status = $1 
-            AND support_id = $2
-            ORDER BY created_at DESC
+            SELECT t.*, u.email as user_email 
+            FROM tickets t
+            LEFT JOIN users u ON t.user_id = u.id
+            WHERE t.status = $1 
+            ${status === 'new' ? '' : 'AND t.support_id = $2'}
+            ORDER BY t.created_at DESC
         `;
-        const result = await pool.query(query, [status, supportId]);
+        
+        const params = [status];
+        if (status !== 'new') {
+            params.push(supportId);
+        }
+        
+        const result = await pool.query(query, params);
         return result.rows;
     },
     
@@ -135,7 +141,7 @@ export const queries = {
                 RETURNING id, company, email, product, subject, description, 
                          status, created_at, user_id, support_id
             `;
-            console.log('Updating ticket:', { ticketId, status, supportId }); // Добавим лог для отладки
+            console.log('Updating ticket:', { ticketId, status, supportId }); 
             const result = await pool.query(query, [status, supportId, ticketId]);
             
             if (result.rows.length === 0) {
@@ -177,56 +183,30 @@ export const queries = {
         return result.rows;
     },
 
-    async getTicketsAnalytics() {
-        const query = `
-            WITH first_responses AS (
-                SELECT 
-                    t.id as ticket_id,
-                    t.created_at as ticket_created,
-                    MIN(c.created_at) as first_response
-                FROM tickets t
-                LEFT JOIN chats c ON c.ticket_id = t.id 
-                WHERE c.sender_id = t.support_id
-                GROUP BY t.id
-            )
-            SELECT 
-                COUNT(DISTINCT t.id) as total_tickets,
-                COUNT(DISTINCT CASE 
-                    WHEN t.created_at >= CURRENT_DATE 
-                    THEN t.id END) as today_tickets,
-                AVG(
-                    CASE WHEN fr.first_response IS NOT NULL 
-                    THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
-                    END
-                )::INTEGER as avg_response_time
-            FROM tickets t
-            LEFT JOIN first_responses fr ON t.id = fr.ticket_id
-        `;
-        const result = await pool.query(query);
-        return result.rows[0];
-    },
-
     async getTicketsAnalytics(dateFrom = null, dateTo = null) {
         const query = `
             WITH first_responses AS (
-                SELECT 
-                    t.id as ticket_id,
-                    t.created_at as ticket_created,
-                    MIN(c.created_at) as first_response
-                FROM tickets t
-                LEFT JOIN chats c ON c.ticket_id = t.id 
-                WHERE c.sender_id = t.support_id
-                ${dateFrom ? `AND t.created_at >= $1` : ''}
-                ${dateTo ? `AND t.created_at <= ${dateFrom ? '$2' : '$1'}` : ''}
-                GROUP BY t.id
-            )
+    SELECT 
+        t.id as ticket_id,
+        t.created_at as ticket_created,
+        t.support_id,
+        MIN(c.created_at) as first_response
+    FROM tickets t
+    LEFT JOIN chats c ON c.ticket_id = t.id 
+    WHERE c.sender_id = t.support_id 
+        AND t.support_id IS NOT NULL 
+        ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
+        ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
+    GROUP BY t.id, t.created_at, t.support_id
+)
             SELECT 
-                COUNT(DISTINCT CASE 
-                    WHEN t.created_at >= CURRENT_DATE 
-                    THEN t.id END) as today_tickets,
-                COUNT(DISTINCT CASE 
-                    WHEN t.status = 'new' 
-                    THEN t.id END) as new_tickets,
+            COUNT(DISTINCT CASE 
+                WHEN DATE_TRUNC('day', t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow') = 
+                     DATE_TRUNC('day', NOW() AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')
+                THEN t.id END) as today_tickets,
+            COUNT(DISTINCT CASE 
+                WHEN t.status = 'new' 
+                THEN t.id END) as new_tickets,
                 COUNT(DISTINCT CASE 
                     WHEN t.status = 'in_progress' 
                     THEN t.id END) as in_progress_tickets,
@@ -234,20 +214,21 @@ export const queries = {
                     WHEN t.status = 'completed' 
                     THEN t.id END) as completed_tickets,
                 AVG(
-                    CASE WHEN fr.first_response IS NOT NULL 
-                    THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
-                    END
-                )::INTEGER as avg_response_time,
-                ROUND(
-                    COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL THEN t.id END)::FLOAT * 100 / 
-                    NULLIF(COUNT(DISTINCT t.id), 0)
-                ) as response_rate
+    CASE 
+        WHEN fr.first_response IS NOT NULL AND fr.ticket_created IS NOT NULL
+        THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
+    END
+)::INTEGER as avg_response_time,
+ROUND(
+    COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL AND fr.ticket_created IS NOT NULL THEN t.id END)::FLOAT * 100 / 
+    NULLIF(COUNT(DISTINCT t.id), 0)
+) as response_rate
             FROM tickets t
-            LEFT JOIN first_responses fr ON t.id = fr.ticket_id
-            WHERE 1=1
-            ${dateFrom ? `AND t.created_at >= $1` : ''}
-            ${dateTo ? `AND t.created_at <= ${dateFrom ? '$2' : '$1'}` : ''}
-        `;
+        LEFT JOIN first_responses fr ON t.id = fr.ticket_id
+        WHERE 1=1
+        ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
+        ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
+    `;
         
         const params = [];
         if (dateFrom) params.push(dateFrom);
@@ -261,23 +242,25 @@ export const queries = {
         const query = `
             WITH first_responses AS (
                 SELECT 
-                    t.support_id,
                     t.id as ticket_id,
                     t.created_at as ticket_created,
+                    t.support_id,
                     MIN(c.created_at) as first_response
                 FROM tickets t
                 LEFT JOIN chats c ON c.ticket_id = t.id 
-                WHERE c.sender_id = t.support_id
-                ${dateFrom ? `AND t.created_at >= $1` : ''}
-                ${dateTo ? `AND t.created_at <= ${dateFrom ? '$2' : '$1'}` : ''}
-                GROUP BY t.id, t.support_id
+                WHERE c.sender_id = t.support_id 
+                    AND t.support_id IS NOT NULL
+                    ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
+                    ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
+                GROUP BY t.id, t.created_at, t.support_id
             ),
             support_stats AS (
                 SELECT 
                     u.id as support_id,
                     COUNT(DISTINCT t.id) as total_tickets,
                     COUNT(DISTINCT CASE 
-                        WHEN t.created_at >= CURRENT_DATE 
+                        WHEN DATE_TRUNC('day', t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow') = 
+                             DATE_TRUNC('day', NOW() AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')
                         THEN t.id END) as today_tickets,
                     COUNT(DISTINCT CASE 
                         WHEN t.status = 'new' 
@@ -289,20 +272,21 @@ export const queries = {
                         WHEN t.status = 'completed' 
                         THEN t.id END) as completed_tickets,
                     AVG(
-                        CASE WHEN fr.first_response IS NOT NULL 
-                        THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
+                        CASE 
+                            WHEN fr.first_response IS NOT NULL AND fr.ticket_created IS NOT NULL
+                            THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
                         END
                     )::INTEGER as avg_response_time,
                     ROUND(
-                        COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL THEN t.id END)::FLOAT * 100 / 
+                        COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL AND fr.ticket_created IS NOT NULL THEN t.id END)::FLOAT * 100 / 
                         NULLIF(COUNT(DISTINCT t.id), 0)
                     ) as response_rate
                 FROM users u
                 LEFT JOIN tickets t ON t.support_id = u.id
-                LEFT JOIN first_responses fr ON fr.support_id = u.id
+                LEFT JOIN first_responses fr ON t.id = fr.ticket_id AND fr.support_id = u.id
                 WHERE u.role = 'support'
-                ${dateFrom ? `AND (t.created_at >= $1 OR t.created_at IS NULL)` : ''}
-                ${dateTo ? `AND (t.created_at <= ${dateFrom ? '$2' : '$1'} OR t.created_at IS NULL)` : ''}
+                ${dateFrom ? `AND (DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp) OR t.created_at IS NULL)` : ''}
+                ${dateTo ? `AND (DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp) OR t.created_at IS NULL)` : ''}
                 GROUP BY u.id
             )
             SELECT 
@@ -311,7 +295,7 @@ export const queries = {
                 u.created_at
             FROM support_stats ss
             JOIN users u ON u.id = ss.support_id
-            ORDER BY total_tickets DESC;
+            ORDER BY total_tickets DESC
         `;
         
         const params = [];
@@ -320,5 +304,29 @@ export const queries = {
         
         const result = await pool.query(query, params);
         return result.rows;
+    },
+
+    async updateResetToken(userId, resetToken, resetTokenExpires) {
+        const result = await pool.query(
+            'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3 RETURNING *',
+            [resetToken, resetTokenExpires, userId]
+        );
+        return result.rows[0];
+    },
+
+    async getUserByResetToken(resetToken) {
+        const result = await pool.query(
+            'SELECT * FROM users WHERE reset_token = $1',
+            [resetToken]
+        );
+        return result.rows[0];
+    },
+
+    async updateUserPassword(userId, passwordHash) {
+        const result = await pool.query(
+            'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2 RETURNING *',
+            [passwordHash, userId]
+        );
+        return result.rows[0];
     }
 };
