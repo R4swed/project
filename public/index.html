@@ -126,7 +126,7 @@
         </div>
         <h2>Чат по заявке <span id="ticketId"></span></h2>
         <button id="takeTicketBtn" class="hidden">Взять в работу</button>
-        <button id="completeTicketBtn" class="hidden">Завершить тикет</button>
+        <button id="completeTicketBtn" class="hidden">Закрыть заявку</button>
         <div id="chatMessages" class="chat-messages"></div>
         <form id="messageForm">
             <div class="form-group">
@@ -190,7 +190,7 @@
         </div>
         <div class="analytics-cards">
             <div class="analytics-card">
-                <h4>Тикеты за сегодня</h4>
+                <h4>Заявки за сегодня</h4>
                 <p id="todayTickets">-</p>
             </div>
             <div class="analytics-card">
@@ -205,16 +205,16 @@
     </div>
 
     <div class="filter-buttons">
-        <button id="showAllTickets">Все тикеты</button>
+        <button id="showAllTickets">Все заявки</button>
         <button id="showAllStaff">Сотрудники</button>
     </div>
 
     <div id="adminContent">
         <div id="allTicketsContainer">
-            <h3>Все тикеты</h3>
+            <h3>Все заявки</h3>
             <div class="admin-filters">
                 <div class="search-filter">
-                    <input type="text" id="ticketSearch" placeholder="Поиск по теме или email...">
+                    <input type="text" id="ticketSearch" placeholder="Поиск по ключевым словам...">
                 </div>
                 <div class="status-filter">
                     <select id="statusFilter">
@@ -224,12 +224,29 @@
                         <option value="completed">Завершённые</option>
                     </select>
                 </div>
+                <div class="product-filter">
+                    <select id="productFilter">
+                        <option value="all">Все продукты</option>
+                        <option value="product1">Курсор</option>
+                        <option value="product2">FaceGate</option>
+                        <option value="product3">Комплексная система диспетчерского контроля</option>
+                        <option value="product4">Шкафы автоматики и щиты управления</option>
+                        <option value="product5">Протокол</option>
+                        <option value="product6">AutoGate</option>
+                        <option value="product7">Система вибромониторинга</option>
+                        <option value="product8">Система мониторинга операторов</option>
+                        <option value="product9">Другое</option>
+                    </select>
+                </div>
             </div>
             <div id="adminTicketsList"></div>
         </div>
 
         <div id="allStaffContainer" class="hidden">
             <h3>Сотрудники поддержки</h3>
+            <div class="staff-filters">
+                <input type="text" id="staffSearch" placeholder="Поиск по ФИО или email...">
+            </div>
             <div id="staffList"></div>
             <div id="staffStatsModal" class="modal hidden">
                 <div class="modal-content">

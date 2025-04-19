@@ -267,11 +267,11 @@ const loadChatMessages = async (ticketId) => {
             if (canSend) {
                 messageInput.placeholder = 'Введите сообщение...';
             } else if (ticketInfo.status === 'completed') {
-                messageInput.placeholder = 'Тикет завершён';
+                messageInput.placeholder = 'Заявка завершена. Отправка сообщений недоступна';
             } else if (ticketInfo.status === 'new') {
                 messageInput.placeholder = (user.role === 'client' || user.role === 'user') ? 
                     'Введите сообщение...' : 
-                    'Возьмите тикет в работу, чтобы начать переписку';
+                    'Возьмите заявку в работу, чтобы начать переписку';
             } else {
                 messageInput.placeholder = 'Отправка сообщений недоступна';
             }
@@ -361,7 +361,7 @@ const loadChatMessages = async (ticketId) => {
                 }
                 window.loadChatMessages(ticketId);
             } catch (error) {
-                alert('Не удалось взять тикет в работу');
+                alert('Не удалось взять заявку в работу');
             }
         });
     }
@@ -380,7 +380,7 @@ const loadChatMessages = async (ticketId) => {
                 newCompleteTicketBtn.classList.add('hidden');
                 window.loadChatMessages(ticketId);
             } catch (error) {
-                alert('Не удалось завершить тикет');
+                alert('Не удалось завершить заявку');
             }
         });
     }

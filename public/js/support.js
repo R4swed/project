@@ -95,7 +95,7 @@ const filterTickets = (tickets, filters) => {
 
 const displayTickets = (tickets, container) => {
     if (!tickets.length) {
-        container.innerHTML = '<p>Нет тикетов с данным статусом</p>';
+        container.innerHTML = '<p>Нет заявок с данным статусом</p>';
         return;
     }
 

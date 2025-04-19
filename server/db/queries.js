@@ -11,10 +11,17 @@ export const queries = {
 
     async getAllSupportStaff() {
         const query = `
-            SELECT id, email, role, created_at
+            SELECT 
+                id, 
+                email, 
+                role, 
+                created_at, 
+                last_name,
+                first_name, 
+                middle_name
             FROM users 
             WHERE role = 'support'
-            ORDER BY created_at DESC
+            ORDER BY last_name, first_name
         `;
         const result = await pool.query(query);
         return result.rows;

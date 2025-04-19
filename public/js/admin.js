@@ -31,6 +31,8 @@ export const showAdminDashboard = () => {
 
     document.getElementById('ticketSearch')?.addEventListener('input', filterTickets);
     document.getElementById('statusFilter')?.addEventListener('change', filterTickets);
+    document.getElementById('productFilter')?.addEventListener('change', filterTickets); 
+
     
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     document.getElementById('adminUserEmail').textContent = user.email;
@@ -61,18 +63,113 @@ const loadStaffList = async () => {
             return;
         }
 
-        container.innerHTML = staff.map(employee => `
-            <div class="staff-list-item" data-staff-id="${employee.id}" data-staff-email="${employee.email}">
-                <div class="staff-info">
-                    <p><strong>${employee.email}</strong></p>
-                    <p class="text-sm">С нами с ${new Date(employee.created_at).toLocaleDateString()}</p>
-                </div>
-            </div>
-        `).join('');
+        const filterStaff = (searchTerm = '') => {
+            return staff.filter(employee => 
+                !searchTerm || 
+                employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                employee.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                employee.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                employee.middle_name?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        };
 
-        container.querySelectorAll('.staff-list-item').forEach(item => {
-            item.addEventListener('click', () => showStaffStats(item.dataset.staffId, item.dataset.staffEmail));
-        });
+        const renderStaffList = (filteredStaff, sortBy = 'response_time') => {
+            const sortedStaff = filteredStaff.map(employee => {
+                const stats = analytics.find(a => a.support_id === employee.id) || {};
+                return {
+                    ...employee,
+                    stats: {
+                        avgResponseTime: stats.avg_response_time || Infinity,
+                        completedTickets: stats.completed_tickets || 0
+                    }
+                };
+            }).sort((a, b) => {
+                if (sortBy === 'response_time') {
+                    if (a.stats.avgResponseTime === Infinity) return 1;
+                    if (b.stats.avgResponseTime === Infinity) return -1;
+                    return a.stats.avgResponseTime - b.stats.avgResponseTime;
+                } else {
+                    return b.stats.completedTickets - a.stats.completedTickets;
+                }
+            });
+
+            const content = document.getElementById('staffListContent');
+            if (!content) return;
+
+            if (!sortedStaff.length) {
+                content.innerHTML = '<p>Сотрудники не найдены</p>';
+                return;
+            }
+
+            content.innerHTML = sortedStaff.map((employee, index) => {
+                const responseTime = employee.stats.avgResponseTime === Infinity ? 
+                    'Нет данных' : 
+                    employee.stats.avgResponseTime < 60 ?
+                        `${employee.stats.avgResponseTime} мин` :
+                        `${Math.floor(employee.stats.avgResponseTime/60)} ч ${employee.stats.avgResponseTime%60} мин`;
+            
+                const fullName = [
+                    employee.last_name || '',
+                    employee.first_name || '',
+                    employee.middle_name || ''
+                ].filter(Boolean).join(' ') || 'Не указано';
+            
+                return `
+                    <div class="staff-list-item" data-staff-id="${employee.id}" data-staff-email="${employee.email}">
+                        <div class="staff-rank">#${index + 1}</div>
+                        <div class="staff-info">
+                            <p><strong>${fullName}</strong></p>
+                            <p class="text-sm">${employee.email}</p>
+                            <p class="text-sm">С нами с ${new Date(employee.created_at).toLocaleDateString()}</p>
+                            <div class="staff-metrics">
+                                <span class="metric">
+                                    <i class="fas fa-clock"></i>
+                                    Среднее время ответа: ${responseTime}
+                                </span>
+                                <span class="metric">
+                                    <i class="fas fa-check-circle"></i>
+                                    Закрытых заявок: ${employee.stats.completedTickets}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            content.querySelectorAll('.staff-list-item').forEach(item => {
+                item.addEventListener('click', () => showStaffStats(item.dataset.staffId, item.dataset.staffEmail));
+            });
+        };
+
+        container.innerHTML = `
+            <div class="staff-sort-controls">
+                <label>Сортировать по:</label>
+                <select id="staffSortSelect">
+                    <option value="response_time">Скорости ответа</option>
+                    <option value="completed">Закрытым заявкам</option>
+                </select>
+            </div>
+            <div id="staffListContent"></div>
+        `;
+
+        const sortSelect = document.getElementById('staffSortSelect');
+        const searchInput = document.getElementById('staffSearch');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                const filteredStaff = filterStaff(searchInput.value);
+                renderStaffList(filteredStaff, sortSelect.value);
+            });
+        }
+
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => {
+                const filteredStaff = filterStaff(searchInput?.value || '');
+                renderStaffList(filteredStaff, sortSelect.value);
+            });
+        }
+
+        renderStaffList(staff, 'response_time');
 
         document.querySelector('.close-modal')?.addEventListener('click', () => {
             document.getElementById('staffStatsModal').classList.add('hidden');
@@ -154,6 +251,7 @@ const setActiveButton = (activeBtn) => {
 const filterTickets = () => {
     const searchTerm = document.getElementById('ticketSearch')?.value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter')?.value;
+    const productFilter = document.getElementById('productFilter')?.value;
     const dateFromFilter = document.getElementById('adminDateFromFilter')?.value;
     const dateToFilter = document.getElementById('adminDateToFilter')?.value;
 
@@ -164,12 +262,14 @@ const filterTickets = () => {
             ticket.support_email?.toLowerCase().includes(searchTerm);
 
         const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
+        
+        const matchesProduct = productFilter === 'all' || ticket.product === productFilter;
 
         const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
         const matchesDateFrom = !dateFromFilter || ticketDate >= new Date(dateFromFilter).setHours(0, 0, 0, 0);
         const matchesDateTo = !dateToFilter || ticketDate <= new Date(dateToFilter).setHours(0, 0, 0, 0);
 
-        return matchesSearch && matchesStatus &&  matchesDateFrom && matchesDateTo;
+        return matchesSearch && matchesStatus && matchesProduct && matchesDateFrom && matchesDateTo;
     });
 
     displayTickets(filteredTickets);
@@ -179,7 +279,7 @@ const displayTickets = (tickets) => {
     const container = document.getElementById('adminTicketsList');
     
     if (!tickets.length) {
-        container.innerHTML = '<p>Нет тикетов</p>';
+        container.innerHTML = '<p>Нет заявок с данным статусом</p>';
         return;
     }
 

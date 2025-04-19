@@ -176,7 +176,7 @@ export const initTickets = () => {
             document.getElementById('ticketListUserEmail').textContent = user.email;
         } catch (error) {
             console.error('Ошибка при загрузке тикетов:', error);
-            ticketsContainer.innerHTML = '<p>Ошибка загрузки тикетов</p>';
+            ticketsContainer.innerHTML = '<p>Ошибка загрузки заявок</p>';
         }
     };
 

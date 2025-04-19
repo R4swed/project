@@ -532,6 +532,26 @@ button:active {
     min-width: 150px;
 }
 
+.product-filter {
+    flex: 1;
+    min-width: 200px;
+}
+
+.product-filter select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: white;
+}
+
+.product-filter select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 .date-filter {
     flex: 2;
     display: flex;
@@ -691,6 +711,20 @@ button:active {
     background-color: #2563eb;
 }
 
+.staff-sort-controls {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.staff-sort-controls select {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+
 .analytics-item {
     display: flex;
     flex-direction: column;
@@ -776,6 +810,52 @@ button:active {
     margin-bottom: 0.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    gap: 1rem;
+    align-items: center;
+}
+
+.staff-rank {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #64748b;
+    min-width: 40px;
+}
+
+.staff-filters {
+    margin-bottom: 1.5rem;
+}
+
+.staff-filters input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.staff-filters input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.staff-metrics {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.metric {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.metric i {
+    color: #3b82f6;
 }
 
 .staff-list-item:hover {
@@ -861,10 +941,6 @@ button:active {
     .message img, 
     .message video {
         max-width: 100%;
-    }
-
-    .category-filter {
-        min-width: 100%;
     }
 }
 
@@ -984,27 +1060,6 @@ button:active {
 
 .password-match-indicator.no-match {
     color: #ef4444;
-}
-
-.category-filter {
-    flex: 1;
-    min-width: 200px;
-}
-
-.category-filter select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    background-color: white;
-    color: #475569;
-}
-
-.category-filter select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .client-filters,
