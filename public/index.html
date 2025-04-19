@@ -66,12 +66,12 @@
                     <option value="" disabled selected>Выберите продукт</option>
                     <option value="product1">Курсор</option>
                     <option value="product2">FaceGate</option>
-                    <option value="product3">Комплексная система диспетчерского контроля и мониторинга промышленного оборудования</option>
+                    <option value="product3">Комплексная система диспетчерского контроля</option>
                     <option value="product4">Шкафы автоматики и щиты управления</option>
                     <option value="product5">Протокол</option>
                     <option value="product6">AutoGate</option>
-                    <option value="product7">Система вибромониторинга насосного оборудования</option>
-                    <option value="product8">Система мониторинга физиологических параметров операторов</option>
+                    <option value="product7">Система вибромониторинга</option>
+                    <option value="product8">Система мониторинга операторов</option>
                     <option value="product9">Другое</option>
                 </select>
             </div>
@@ -92,33 +92,32 @@
         </form>
     </div>
 
-<div id="ticketList" class="hidden">
-    <div class="header">
-        <span id="ticketListUserEmail"></span>
-        <button id="ticketListLogoutBtn">Выйти</button>
+    <div id="ticketList" class="hidden">
+        <div class="header">
+            <span id="ticketListUserEmail"></span>
+            <button id="ticketListLogoutBtn">Выйти</button>
+        </div>
+        <h2>Ваши заявки</h2>
+        <div class="client-filters">
+            <div class="search-filter">
+                <input type="text" id="clientTicketSearch" placeholder="Поиск по теме...">
+            </div>
+            <div class="status-filter">
+                <select id="clientStatusFilter">
+                    <option value="all">Все статусы</option>
+                    <option value="new">Новые</option>
+                    <option value="in_progress">В работе</option>
+                    <option value="completed">Завершённые</option>
+                </select>
+            </div>
+            <div class="date-filter">
+                <input type="date" id="clientDateFromFilter" placeholder="От">
+                <input type="date" id="clientDateToFilter" placeholder="До">
+            </div>
+        </div>
+        <div id="ticketsContainer"></div>
+        <button id="newTicketBtn">Создать новую заявку</button>
     </div>
-    <h2>Ваши заявки</h2>
-    <div class="client-filters">
-        <div class="search-filter">
-            <input type="text" id="clientTicketSearch" placeholder="Поиск по теме...">
-        </div>
-        <div class="status-filter">
-            <select id="clientStatusFilter">
-                <option value="all">Все статусы</option>
-                <option value="new">Новые</option>
-                <option value="in_progress">В работе</option>
-                <option value="completed">Завершённые</option>
-            </select>
-        </div>
-
-        <div class="date-filter">
-            <input type="date" id="clientDateFromFilter" placeholder="От">
-            <input type="date" id="clientDateToFilter" placeholder="До">
-        </div>
-    </div>
-    <div id="ticketsContainer"></div>
-    <button id="newTicketBtn">Создать новую заявку</button>
-</div>
 
     <div id="chatContainer" class="hidden">
         <div class="header">
@@ -139,176 +138,219 @@
         </form>
     </div>
 
-<div id="supportDashboard" class="hidden">
-    <div class="header">
-        <span id="supportUserEmail"></span>
-        <button id="supportLogoutBtn">Выйти</button>
-    </div>
-    <h2>Панель сотрудника поддержки</h2>
-    <div class="support-filters">
-        <div class="search-filter">
-            <input type="text" id="supportTicketSearch" placeholder="Поиск по теме или email...">
+    <div id="supportDashboard" class="hidden">
+        <div class="header">
+            <span id="supportUserEmail"></span>
+            <button id="supportLogoutBtn">Выйти</button>
         </div>
-        <div class="date-filter">
-            <input type="date" id="supportDateFromFilter" placeholder="От">
-            <input type="date" id="supportDateToFilter" placeholder="До">
-        </div>
-    </div>
-    <div class="filter-buttons">
-        <button id="filterNewTickets">Новые</button>
-        <button id="filterInProgressTickets">В работе</button>
-        <button id="filterCompletedTickets">Завершённые</button>
-    </div>
-    <div id="supportTicketsContainer">
-        <div id="newTicketsContainer" class="hidden">
-            <h3>Новые заявки</h3>
-            <div id="newTickets"></div>
-        </div>
-        <div id="in_progressTicketsContainer" class="hidden">
-            <h3>В работе</h3>
-            <div id="inProgressTickets"></div>
-        </div>
-        <div id="completedTicketsContainer" class="hidden">
-            <h3>Завершённые</h3>
-            <div id="completedTickets"></div>
-        </div>
-    </div>
-</div>
-
-<div id="adminDashboard" class="hidden">
-    <div class="header">
-        <span id="adminUserEmail"></span>
-        <button id="adminLogoutBtn">Выйти</button>
-    </div>
-
-    <div class="admin-dashboard-header">
-        <div class="analytics-section">
+        <h2>Панель сотрудника поддержки</h2>
+        <div class="support-filters">
+            <div class="search-filter">
+                <input type="text" id="supportTicketSearch" placeholder="Поиск по теме или email...">
+            </div>
             <div class="date-filter">
-                <input type="date" id="adminDateFromFilter" placeholder="От">
-                <input type="date" id="adminDateToFilter" placeholder="До">
+                <input type="date" id="supportDateFromFilter" placeholder="От">
+                <input type="date" id="supportDateToFilter" placeholder="До">
             </div>
         </div>
-        <div class="analytics-cards">
-            <div class="analytics-card">
-                <h4>Заявки за сегодня</h4>
-                <p id="todayTickets">-</p>
+        <div class="filter-buttons">
+            <button id="filterNewTickets">Новые</button>
+            <button id="filterInProgressTickets">В работе</button>
+            <button id="filterCompletedTickets">Завершённые</button>
+        </div>
+        <div id="supportTicketsContainer">
+            <div id="newTicketsContainer" class="hidden">
+                <h3>Новые заявки</h3>
+                <div id="newTickets"></div>
             </div>
-            <div class="analytics-card">
-                <h4>Среднее время ответа</h4>
-                <p id="avgResponseTime">-</p>
+            <div id="in_progressTicketsContainer" class="hidden">
+                <h3>В работе</h3>
+                <div id="inProgressTickets"></div>
             </div>
-            <div class="analytics-card">
-                <h4>% ответов</h4>
-                <p id="responseRate">-</p>
-            </div>
-            <div class="analytics-card overdue-card">
-                <h4>Просрочено ответов</h4>
-                <p id="overdueResponseRate">-</p>
-            </div>
-            <div class="analytics-card overdue-card">
-                <h4>Просрочено решений</h4>
-                <p id="overdueResolutionRate">-</p>
+            <div id="completedTicketsContainer" class="hidden">
+                <h3>Завершённые</h3>
+                <div id="completedTickets"></div>
             </div>
         </div>
     </div>
 
-    <div class="filter-buttons">
-        <button id="showAllTickets">Все заявки</button>
-        <button id="showAllStaff">Сотрудники</button>
-        <button id="showStatistics">Графики статистики</button>
-    </div>
-
-    <div id="adminContent">
-        <div id="allTicketsContainer">
-            <h3>Все заявки</h3>
-            <div class="admin-filters">
-                <div class="search-filter">
-                    <input type="text" id="ticketSearch" placeholder="Поиск по ключевым словам...">
-                </div>
-                <div class="status-filter">
-                    <select id="statusFilter">
-                        <option value="all">Все статусы</option>
-                        <option value="new">Новые</option>
-                        <option value="in_progress">В работе</option>
-                        <option value="completed">Завершённые</option>
-                    </select>
-                </div>
-                <div class="product-filter">
-                    <select id="productFilter">
-                        <option value="all">Все продукты</option>
-                        <option value="product1">Курсор</option>
-                        <option value="product2">FaceGate</option>
-                        <option value="product3">Комплексная система диспетчерского контроля</option>
-                        <option value="product4">Шкафы автоматики и щиты управления</option>
-                        <option value="product5">Протокол</option>
-                        <option value="product6">AutoGate</option>
-                        <option value="product7">Система вибромониторинга</option>
-                        <option value="product8">Система мониторинга операторов</option>
-                        <option value="product9">Другое</option>
-                    </select>
-                </div>
-            </div>
-            <div id="adminTicketsList"></div>
+    <div id="adminDashboard" class="hidden">
+        <div class="header">
+            <span id="adminUserEmail"></span>
+            <button id="adminLogoutBtn">Выйти</button>
         </div>
 
-        <div id="allStaffContainer" class="hidden">
-            <h3>Сотрудники поддержки</h3>
-            <div class="staff-filters">
-                <input type="text" id="staffSearch" placeholder="Поиск по ФИО или email...">
+        <div class="admin-dashboard-header">
+            <div class="analytics-section">
+                <div class="date-filter">
+                    <input type="date" id="adminDateFromFilter" placeholder="От">
+                    <input type="date" id="adminDateToFilter" placeholder="До">
+                </div>
             </div>
-            <div id="staffList"></div>
-            <div id="staffStatsModal" class="modal hidden">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Статистика сотрудника <span id="staffEmail"></span></h3>
-                        <button class="close-modal">×</button>
-                    </div>
-                    <div class="staff-stats-filters">
-                        <div class="date-filter">
-                            <input type="date" id="staffStatsFromDate" placeholder="От">
-                            <input type="date" id="staffStatsToDate" placeholder="До">
-                        </div>
-                        <button id="applyStaffStatsFilter">Применить</button>
-                    </div>
-                    <div class="staff-analytics">
-                        <div class="analytics-item">
-                            <span class="analytics-label">Заявки за сегодня</span>
-                            <span id="staffTodayTickets" class="analytics-value">-</span>
-                        </div>
-                        <div class="analytics-item">
-                            <span class="analytics-label">Всего заявок</span>
-                            <span id="staffPeriodTickets" class="analytics-value">-</span>
-                        </div>
-                        <div class="analytics-item">
-                            <span class="analytics-label">В работе</span>
-                            <span id="staffInProgressTickets" class="analytics-value">-</span>
-                        </div>
-                        <div class="analytics-item">
-                            <span class="analytics-label">Завершённые</span>
-                            <span id="staffCompletedTickets" class="analytics-value">-</span>
-                        </div>
-                        <div class="analytics-item">
-                            <span class="analytics-label">% обработанных заявок</span>
-                            <span id="staffResponseRate" class="analytics-value">-</span>
-                        </div>
-                        <div class="analytics-item">
-                            <span class="analytics-label">Среднее время ответа</span>
-                            <span id="staffAvgResponse" class="analytics-value">-</span>
-                        </div>
-                    </div>
+            <div class="analytics-cards">
+                <div class="analytics-card">
+                    <h4>Заявки за сегодня</h4>
+                    <p id="todayTickets">-</p>
+                </div>
+                <div class="analytics-card">
+                    <h4>Среднее время ответа</h4>
+                    <p id="avgResponseTime">-</p>
+                </div>
+                <div class="analytics-card">
+                    <h4>% ответов</h4>
+                    <p id="responseRate">-</p>
+                </div>
+                <div class="analytics-card overdue-card">
+                    <h4>Просрочено ответов</h4>
+                    <p id="overdueResponseRate">-</p>
+                </div>
+                <div class="analytics-card overdue-card">
+                    <h4>Просрочено решений</h4>
+                    <p id="overdueResolutionRate">-</p>
                 </div>
             </div>
         </div>
-        <div id="statisticsContainer" class="hidden">
-            <h3>Статистика заявок</h3>
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <h4>Распределение заявок по продуктам</h4>
-                    <div id="productsChart"></div>
+
+        <div class="filter-buttons">
+            <button id="showAllTickets">Все заявки</button>
+            <button id="showAllStaff">Сотрудники</button>
+            <button id="showStatistics">Графики статистики</button>
+        </div>
+
+        <div id="adminContent">
+            <div id="allTicketsContainer">
+                <h3>Все заявки</h3>
+                <div class="admin-filters">
+                    <div class="search-filter">
+                        <input type="text" id="ticketSearch" placeholder="Поиск по ключевым словам...">
+                    </div>
+                    <div class="status-filter">
+                        <select id="statusFilter">
+                            <option value="all">Все статусы</option>
+                            <option value="new">Новые</option>
+                            <option value="in_progress">В работе</option>
+                            <option value="completed">Завершённые</option>
+                        </select>
+                    </div>
+                    <div class="product-filter">
+                        <select id="productFilter">
+                            <option value="all">Все продукты</option>
+                            <option value="product1">Курсор</option>
+                            <option value="product2">FaceGate</option>
+                            <option value="product3">Комплексная система диспетчерского контроля</option>
+                            <option value="product4">Шкафы автоматики и щиты управления</option>
+                            <option value="product5">Протокол</option>
+                            <option value="product6">AutoGate</option>
+                            <option value="product7">Система вибромониторинга</option>
+                            <option value="product8">Система мониторинга операторов</option>
+                            <option value="product9">Другое</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="chart-container">
-                    <h4>Распределение времени обработки</h4>
-                    <div id="responseTimeChart"></div>
+                <div id="adminTicketsList"></div>
+            </div>
+
+            <div id="allStaffContainer" class="hidden">
+                <h3>Сотрудники поддержки</h3>
+                <div class="staff-filters">
+                    <div class="staff-sort-controls">
+                        <label>Сортировать по:</label>
+                        <select id="staffSortSelect">
+                            <option value="response_time">Скорости ответа</option>
+                            <option value="completed">Закрытым заявкам</option>
+                        </select>
+                    </div>
+                    <input type="text" id="staffSearch" placeholder="Поиск по ФИО или email...">
+                    <button id="addStaffBtn" class="primary-button">+ Добавить сотрудника</button>
+                </div>
+                <div id="staffList"></div>
+            </div>
+
+            <div id="statisticsContainer" class="hidden">
+                <h3>Статистика заявок</h3>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h4>Распределение заявок по продуктам</h4>
+                        <div id="productsChart"></div>
+                    </div>
+                    <div class="chart-container">
+                        <h4>Распределение времени обработки</h4>
+                        <div id="responseTimeChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="addStaffModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Добавить сотрудника</h3>
+                    <button class="close-modal">×</button>
+                </div>
+                <form id="addStaffForm">
+                    <div class="form-group">
+                        <label for="staffEmail">Email:</label>
+                        <input type="email" id="staffEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="staffPassword">Пароль:</label>
+                        <input type="password" id="staffPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="staffLastName">Фамилия:</label>
+                        <input type="text" id="staffLastName">
+                    </div>
+                    <div class="form-group">
+                        <label for="staffFirstName">Имя:</label>
+                        <input type="text" id="staffFirstName">
+                    </div>
+                    <div class="form-group">
+                        <label for="staffMiddleName">Отчество:</label>
+                        <input type="text" id="staffMiddleName">
+                    </div>
+                    <button type="submit" class="primary-button">Добавить</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="staffStatsModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Статистика сотрудника <span id="staffEmail"></span></h3>
+                    <button class="close-modal">×</button>
+                </div>
+                <div class="staff-stats-filters">
+                    <div class="date-filter">
+                        <input type="date" id="staffStatsFromDate" placeholder="От">
+                        <input type="date" id="staffStatsToDate" placeholder="До">
+                    </div>
+                    <button id="applyStaffStatsFilter">Применить</button>
+                </div>
+                <div class="staff-analytics">
+                    <div class="analytics-item">
+                        <span class="analytics-label">Заявки за сегодня</span>
+                        <span id="staffTodayTickets" class="analytics-value">-</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">Всего заявок</span>
+                        <span id="staffPeriodTickets" class="analytics-value">-</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">В работе</span>
+                        <span id="staffInProgressTickets" class="analytics-value">-</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">Завершённые</span>
+                        <span id="staffCompletedTickets" class="analytics-value">-</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">% обработанных заявок</span>
+                        <span id="staffResponseRate" class="analytics-value">-</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">Среднее время ответа</span>
+                        <span id="staffAvgResponse" class="analytics-value">-</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -320,6 +362,7 @@
     <script type="module" src="/js/chat.js"></script>
     <script type="module" src="/js/tickets.js"></script>
     <script type="module" src="/js/support.js"></script>
+    <script type="module" src="/js/admin.js"></script>
     <script type="module" src="/js/main.js"></script>
 </body>
 </html>

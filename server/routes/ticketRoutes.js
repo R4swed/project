@@ -1,6 +1,7 @@
 import express from 'express';
 import { queries } from '../db/queries.js';
 import { getIO } from '../index.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -177,6 +178,35 @@ router.get('/admin/staff-analytics', isAdmin, async (req, res) => {
         res.json(analytics);
     } catch (error) {
         console.error('Ошибка при получении статистики сотрудников:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+});
+
+router.post('/admin/add/staff', isAdmin, async (req, res) => {
+    try {
+        const { email, password, last_name, first_name, middle_name } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email и пароль обязательны' });
+        }
+
+        const existingUser = await queries.getUserByEmail(email);
+        if (existingUser) {
+            return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newStaff = await queries.createStaff({
+            email,
+            password: hashedPassword,
+            last_name,
+            first_name,
+            middle_name
+        });
+
+        res.json({ success: true, staff: newStaff });
+    } catch (error) {
+        console.error('Ошибка при добавлении сотрудника:', error);
         res.status(500).json({ error: 'Внутренняя ошибка сервера' });
     }
 });

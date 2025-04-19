@@ -380,5 +380,15 @@ export const queries = {
             [passwordHash, userId]
         );
         return result.rows[0];
+    },
+
+    async createStaff({ email, password, last_name, first_name, middle_name, role }) {
+        const result = await pool.query(
+            `INSERT INTO users (email, password_hash, last_name, first_name, middle_name, role)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id, email, role, last_name, first_name, middle_name`,
+            [email, password, last_name, first_name, middle_name, 'support']
+        );
+        return result.rows[0];
     }
 };

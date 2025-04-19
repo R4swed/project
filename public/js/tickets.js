@@ -63,7 +63,7 @@ const renderTicket = (ticket) => {
     ticketElement.addEventListener('click', () => {
         showSection(elements.chatContainer);
         document.querySelector('#chatContainer h2').innerHTML = 
-            `Чат по заявке (${ticket.subject})<span id="ticketId" class="hidden">${ticket.id}</span>`;
+            `Чат по заявке ${ticket.subject}<span id="ticketId" class="hidden">${ticket.id}</span>`;
         window.loadChatMessages(ticket.id);
     });
     return ticketElement;

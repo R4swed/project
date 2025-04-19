@@ -228,4 +228,20 @@ export const api = {
         return response.json();
     },
 
+    async addStaff(staffData) {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/tickets/admin/add/staff', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(staffData)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка добавления сотрудника');
+        }
+        return response.json();
+    }
 };

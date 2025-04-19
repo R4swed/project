@@ -22,6 +22,11 @@ export const showAdminDashboard = () => {
     loadAnalytics(monthAgo.toISOString().split('T')[0], today.toISOString().split('T')[0]);
     loadAllTickets();
 
+    const allTicketsBtn = document.getElementById('showAllTickets');
+    if (allTicketsBtn) {
+        setActiveButton(allTicketsBtn);
+    }
+
     document.getElementById('adminDateFromFilter')?.addEventListener('change', updateDataByDate);
     document.getElementById('adminDateToFilter')?.addEventListener('change', updateDataByDate);
     document.getElementById('ticketSearch')?.addEventListener('input', filterTickets);
@@ -149,16 +154,7 @@ const loadStaffList = async () => {
             });
         };
 
-        container.innerHTML = `
-            <div class="staff-sort-controls">
-                <label>Сортировать по:</label>
-                <select id="staffSortSelect">
-                    <option value="response_time">Скорости ответа</option>
-                    <option value="completed">Закрытым заявкам</option>
-                </select>
-            </div>
-            <div id="staffListContent"></div>
-        `;
+        container.innerHTML = `<div id="staffListContent"></div>`;
 
         const sortSelect = document.getElementById('staffSortSelect');
         const searchInput = document.getElementById('staffSearch');
@@ -166,7 +162,7 @@ const loadStaffList = async () => {
         if (searchInput) {
             searchInput.addEventListener('input', () => {
                 const filteredStaff = filterStaff(searchInput.value);
-                renderStaffList(filteredStaff, sortSelect.value);
+                renderStaffList(filteredStaff, sortSelect?.value || 'response_time');
             });
         }
 
@@ -174,6 +170,51 @@ const loadStaffList = async () => {
             sortSelect.addEventListener('change', () => {
                 const filteredStaff = filterStaff(searchInput?.value || '');
                 renderStaffList(filteredStaff, sortSelect.value);
+            });
+        }
+
+        const addStaffBtn = document.getElementById('addStaffBtn');
+        const addStaffModal = document.getElementById('addStaffModal');
+        const addStaffForm = document.getElementById('addStaffForm');
+
+        if (addStaffBtn && addStaffModal) {
+            addStaffBtn.addEventListener('click', () => {
+                addStaffModal.classList.remove('hidden');
+            });
+
+            addStaffModal.querySelector('.close-modal')?.addEventListener('click', () => {
+                addStaffModal.classList.add('hidden');
+                addStaffForm?.reset();
+            });
+
+            addStaffModal.addEventListener('click', (e) => {
+                if (e.target === addStaffModal) {
+                    addStaffModal.classList.add('hidden');
+                    addStaffForm?.reset();
+                }
+            });
+        }
+
+        if (addStaffForm) {
+            addStaffForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    const staffData = {
+                        email: document.getElementById('staffEmail').value,
+                        password: document.getElementById('staffPassword').value,
+                        last_name: document.getElementById('staffLastName').value,
+                        first_name: document.getElementById('staffFirstName').value,
+                        middle_name: document.getElementById('staffMiddleName').value
+                    };
+
+                    await api.addStaff(staffData);
+                    addStaffModal.classList.add('hidden');
+                    addStaffForm.reset();
+                    await loadStaffList(); 
+                    alert('Сотрудник успешно добавлен');
+                } catch (error) {
+                    alert(error.message || 'Ошибка при добавлении сотрудника');
+                }
             });
         }
 
@@ -210,6 +251,16 @@ const showStaffStats = async (staffId, staffEmail) => {
         dateFromInput.valueAsDate = monthAgo;
         dateToInput.valueAsDate = today;
     }
+
+    modal.querySelector('.close-modal')?.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
 
     const updateStats = async (dateFrom, dateTo) => {
         try {
