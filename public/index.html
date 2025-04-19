@@ -6,6 +6,7 @@
     <title>Техподдержка</title>
     <link href="/css/styles.css" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 <body>
     <div id="loginForm">
@@ -185,7 +186,6 @@
             <div class="date-filter">
                 <input type="date" id="adminDateFromFilter" placeholder="От">
                 <input type="date" id="adminDateToFilter" placeholder="До">
-                <button id="applyAdminDateFilter">Применить</button>
             </div>
         </div>
         <div class="analytics-cards">
@@ -201,12 +201,21 @@
                 <h4>% ответов</h4>
                 <p id="responseRate">-</p>
             </div>
+            <div class="analytics-card overdue-card">
+                <h4>Просрочено ответов</h4>
+                <p id="overdueResponseRate">-</p>
+            </div>
+            <div class="analytics-card overdue-card">
+                <h4>Просрочено решений</h4>
+                <p id="overdueResolutionRate">-</p>
+            </div>
         </div>
     </div>
 
     <div class="filter-buttons">
         <button id="showAllTickets">Все заявки</button>
         <button id="showAllStaff">Сотрудники</button>
+        <button id="showStatistics">Графики статистики</button>
     </div>
 
     <div id="adminContent">
@@ -290,8 +299,20 @@
                 </div>
             </div>
         </div>
+        <div id="statisticsContainer" class="hidden">
+            <h3>Статистика заявок</h3>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h4>Распределение заявок по продуктам</h4>
+                    <div id="productsChart"></div>
+                </div>
+                <div class="chart-container">
+                    <h4>Распределение времени обработки</h4>
+                    <div id="responseTimeChart"></div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
     <script type="module" src="/js/utils.js"></script>
     <script type="module" src="/js/api.js"></script>

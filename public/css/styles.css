@@ -552,6 +552,24 @@ button:active {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+#productsChart {
+    max-height: 100%;
+    width: 100%;
+    min-height: 500px;
+}
+
+#productsChart .chartjs-legend {
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    max-width: 200px !important;
+}
+
+#productsChart .chartjs-legend li {
+    margin-bottom: 10px !important;
+    line-height: 1.2 !important;
+}
+
 .date-filter {
     flex: 2;
     display: flex;
@@ -613,6 +631,132 @@ button:active {
     gap: 1rem;
 }
 
+.statistics-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.statistics-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    min-height: 400px;
+}
+
+.chart-container h4 {
+    margin-bottom: 1rem;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.chart-card {
+    height: 500px;
+    width: 100%;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.apexcharts-legend {
+    padding: 0 10px !important;
+    max-height: 450px !important;
+    overflow-y: auto !important;
+}
+
+.apexcharts-legend-text {
+    color: #475569 !important;
+    font-size: 0.875rem !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    display: inline-block !important;
+    width: 200px !important;
+    line-height: 1.4 !important;
+    margin-left: 8px !important;
+}
+
+.apexcharts-legend-marker {
+    margin-right: 8px !important;
+}
+
+.apexcharts-legend-series {
+    display: flex !important;
+    align-items: flex-start !important;
+    margin: 8px 0 !important;
+}
+
+.apexcharts-yaxis-title {
+    font-weight: 500 !important;
+}
+
+.apexcharts-yaxis-label {
+    font-family: 'Inter', sans-serif !important;
+}
+
+.yaxis-title {
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+}
+
+.apexcharts-yaxis-title-text {
+    fill: #1e293b !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.apexcharts-yaxis text {
+    font-size: 14px !important;
+    fill: #000000 !important;
+}
+
+.chart-legend {
+    margin-left: 1rem;
+    max-width: 200px;
+    overflow-y: auto;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.2;
+}
+
+.chart-legend-color {
+    width: 12px;
+    height: 12px;
+    margin-right: 0.5rem;
+    margin-top: 3px;
+    flex-shrink: 0;
+    border-radius: 2px;
+}
+
+.chart-legend-text {
+    word-wrap: break-word;
+}
+
+.chart-card h4 {
+    margin: 0 0 1rem 0;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
 .analytics-card.new-tickets {
     border-color: #f87171;
 }
@@ -627,6 +771,18 @@ button:active {
 
 .analytics-card:hover {
     transform: translateY(-2px);
+}
+
+.analytics-card.overdue-card {
+    border-left: 4px solid #ef4444;
+}
+
+.analytics-card.overdue-card h4 {
+    color: #ef4444;
+}
+
+.analytics-card.overdue-card:hover {
+    background-color: #fef2f2;
 }
 
 .analytics-card h4 {

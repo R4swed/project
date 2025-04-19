@@ -193,27 +193,40 @@ export const queries = {
     async getTicketsAnalytics(dateFrom = null, dateTo = null) {
         const query = `
             WITH first_responses AS (
-    SELECT 
-        t.id as ticket_id,
-        t.created_at as ticket_created,
-        t.support_id,
-        MIN(c.created_at) as first_response
-    FROM tickets t
-    LEFT JOIN chats c ON c.ticket_id = t.id 
-    WHERE c.sender_id = t.support_id 
-        AND t.support_id IS NOT NULL 
-        ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
-        ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
-    GROUP BY t.id, t.created_at, t.support_id
-)
+                SELECT 
+                    t.id as ticket_id,
+                    t.created_at as ticket_created,
+                    t.support_id,
+                    MIN(c.created_at) as first_response,
+                    t.status,
+                    CASE 
+                        WHEN MIN(c.created_at) IS NULL AND 
+                             EXTRACT(EPOCH FROM (NOW() - t.created_at))/60 > 10 THEN true
+                        WHEN MIN(c.created_at) IS NOT NULL AND 
+                             EXTRACT(EPOCH FROM (MIN(c.created_at) - t.created_at))/60 > 10 THEN true
+                        ELSE false
+                    END as is_response_overdue,
+                    CASE 
+                        WHEN t.status != 'completed' AND 
+                             EXTRACT(EPOCH FROM (NOW() - t.created_at))/3600 > 24 THEN true
+                        ELSE false
+                    END as is_resolution_overdue
+                FROM tickets t
+                LEFT JOIN chats c ON c.ticket_id = t.id 
+                    AND c.sender_id = t.support_id
+                WHERE 1=1
+                    ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
+                    ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
+                GROUP BY t.id, t.created_at, t.support_id, t.status
+            )
             SELECT 
-            COUNT(DISTINCT CASE 
-                WHEN DATE_TRUNC('day', t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow') = 
-                     DATE_TRUNC('day', NOW() AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')
-                THEN t.id END) as today_tickets,
-            COUNT(DISTINCT CASE 
-                WHEN t.status = 'new' 
-                THEN t.id END) as new_tickets,
+                COUNT(DISTINCT CASE 
+                    WHEN DATE_TRUNC('day', t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow') = 
+                         DATE_TRUNC('day', NOW() AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')
+                    THEN t.id END) as today_tickets,
+                COUNT(DISTINCT CASE 
+                    WHEN t.status = 'new' 
+                    THEN t.id END) as new_tickets,
                 COUNT(DISTINCT CASE 
                     WHEN t.status = 'in_progress' 
                     THEN t.id END) as in_progress_tickets,
@@ -221,21 +234,29 @@ export const queries = {
                     WHEN t.status = 'completed' 
                     THEN t.id END) as completed_tickets,
                 AVG(
-    CASE 
-        WHEN fr.first_response IS NOT NULL AND fr.ticket_created IS NOT NULL
-        THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
-    END
-)::INTEGER as avg_response_time,
-ROUND(
-    COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL AND fr.ticket_created IS NOT NULL THEN t.id END)::FLOAT * 100 / 
-    NULLIF(COUNT(DISTINCT t.id), 0)
-) as response_rate
+                    CASE 
+                        WHEN fr.first_response IS NOT NULL AND fr.ticket_created IS NOT NULL
+                        THEN EXTRACT(EPOCH FROM (fr.first_response - fr.ticket_created))/60 
+                    END
+                )::INTEGER as avg_response_time,
+                ROUND(
+                    COUNT(DISTINCT CASE WHEN fr.first_response IS NOT NULL THEN t.id END)::FLOAT * 100 / 
+                    NULLIF(COUNT(DISTINCT t.id), 0)
+                ) as response_rate,
+                ROUND(
+                    COUNT(DISTINCT CASE WHEN fr.is_response_overdue THEN t.id END)::FLOAT * 100 / 
+                    NULLIF(COUNT(DISTINCT t.id), 0)
+                ) as overdue_response_rate,
+                ROUND(
+                    COUNT(DISTINCT CASE WHEN fr.is_resolution_overdue THEN t.id END)::FLOAT * 100 / 
+                    NULLIF(COUNT(DISTINCT t.id), 0)
+                ) as overdue_resolution_rate
             FROM tickets t
-        LEFT JOIN first_responses fr ON t.id = fr.ticket_id
-        WHERE 1=1
-        ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
-        ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
-    `;
+            LEFT JOIN first_responses fr ON t.id = fr.ticket_id
+            WHERE 1=1
+                ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
+                ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
+        `;
         
         const params = [];
         if (dateFrom) params.push(dateFrom);
@@ -243,6 +264,30 @@ ROUND(
         
         const result = await pool.query(query, params);
         return result.rows[0];
+    },
+
+    async getAnalytics(dateFrom = null, dateTo = null) {
+        const query = `
+            WITH stats AS (
+                // ...existing analytics query...
+            ),
+            product_stats AS (
+                SELECT 
+                    product,
+                    COUNT(*) as count
+                FROM tickets
+                WHERE 1=1
+                    ${dateFrom ? `AND DATE_TRUNC('day', created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
+                    ${dateTo ? `AND DATE_TRUNC('day', created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
+                GROUP BY product
+            )
+            SELECT 
+                s.*,
+                json_agg(json_build_object('product', ps.product, 'count', ps.count)) as products_distribution
+            FROM stats s
+            LEFT JOIN product_stats ps ON 1=1
+            GROUP BY s.*;
+        `;
     },
 
     async getStaffAnalytics(dateFrom = null, dateTo = null) {

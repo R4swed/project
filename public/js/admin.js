@@ -22,16 +22,11 @@ export const showAdminDashboard = () => {
     loadAnalytics(monthAgo.toISOString().split('T')[0], today.toISOString().split('T')[0]);
     loadAllTickets();
 
-    document.getElementById('applyAdminDateFilter')?.addEventListener('click', () => {
-        const dateFrom = document.getElementById('adminDateFromFilter')?.value;
-        const dateTo = document.getElementById('adminDateToFilter')?.value;
-        loadAnalytics(dateFrom, dateTo);
-        filterTickets(); 
-    });
-
+    document.getElementById('adminDateFromFilter')?.addEventListener('change', updateDataByDate);
+    document.getElementById('adminDateToFilter')?.addEventListener('change', updateDataByDate);
     document.getElementById('ticketSearch')?.addEventListener('input', filterTickets);
     document.getElementById('statusFilter')?.addEventListener('change', filterTickets);
-    document.getElementById('productFilter')?.addEventListener('change', filterTickets); 
+    document.getElementById('productFilter')?.addEventListener('change', filterTickets);
 
     
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -45,6 +40,19 @@ const loadAllTickets = async () => {
         filterTickets(); 
     } catch (error) {
         console.error('Ошибка загрузки тикетов:', error);
+    }
+};
+
+const updateDataByDate = () => {
+    const dateFrom = document.getElementById('adminDateFromFilter')?.value;
+    const dateTo = document.getElementById('adminDateToFilter')?.value;
+    
+    if (dateFrom && dateTo && new Date(dateFrom) <= new Date(dateTo)) {
+        loadAnalytics(dateFrom, dateTo);
+        filterTickets();
+        if (document.getElementById('statisticsContainer')?.classList.contains('hidden') === false) {
+            loadStatistics();
+        }
     }
 };
 
@@ -307,13 +315,17 @@ const displayTickets = (tickets) => {
 const loadAnalytics = async (dateFrom = null, dateTo = null) => {
     try {
         const analytics = await api.getAnalytics(dateFrom, dateTo);
-        
+        let productsChart = null;
+
         document.getElementById('todayTickets').textContent = analytics.today_tickets || '0';
         document.getElementById('responseRate').textContent = `${analytics.response_rate || 0}%`;
-        
         document.getElementById('newTickets').textContent = analytics.new_tickets || '0';
         document.getElementById('inProgressTickets').textContent = analytics.in_progress_tickets || '0';
         document.getElementById('completedTickets').textContent = analytics.completed_tickets || '0';
+        document.getElementById('overdueResponseRate').textContent = 
+            `${analytics.overdue_response_rate || 0}%`;
+        document.getElementById('overdueResolutionRate').textContent = 
+            `${analytics.overdue_resolution_rate || 0}%`;
         
         const avgTime = analytics.avg_response_time;
         let timeDisplay = 'Нет данных';
@@ -337,9 +349,197 @@ const loadAnalytics = async (dateFrom = null, dateTo = null) => {
             'responseRate',
             'newTickets',
             'inProgressTickets',
-            'completedTickets'
+            'completedTickets',
+            'overdueResponseRate',
+            'overdueResolutionRate'
         ].forEach(id => {
             document.getElementById(id).textContent = '-';
+        });
+    }
+};
+
+const loadStatistics = async () => {
+    try {
+        const dateFrom = document.getElementById('adminDateFromFilter')?.value;
+        const dateTo = document.getElementById('adminDateToFilter')?.value;
+
+        const productChartData = Object.keys(productLocales)
+            .map(key => ({
+                product: productLocales[key],
+                count: allTicketsCache.filter(ticket => {
+                    const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
+                    const matchesDateFrom = !dateFrom || ticketDate >= new Date(dateFrom).setHours(0, 0, 0, 0);
+                    const matchesDateTo = !dateTo || ticketDate <= new Date(dateTo).setHours(23, 59, 59, 999);
+                    return ticket.product === key && matchesDateFrom && matchesDateTo;
+                }).length
+            }))
+            .filter(item => item.count > 0) 
+            .sort((a, b) => b.count - a.count);
+
+        const responseTimeRanges = {
+            'До 10 мин': 0,
+            '10-30 мин': 0,
+            '30-60 мин': 0,
+            'Более часа': 0
+        };
+
+        const filteredTickets = allTicketsCache.filter(ticket => {
+            const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
+            const matchesDateFrom = !dateFrom || ticketDate >= new Date(dateFrom).setHours(0, 0, 0, 0);
+            const matchesDateTo = !dateTo || ticketDate <= new Date(dateTo).setHours(23, 59, 59, 999);
+            return matchesDateFrom && matchesDateTo;
+        });
+
+        filteredTickets.forEach(ticket => {
+            const responseTime = ticket.response_time || 0;
+            if (responseTime <= 10) {
+                responseTimeRanges['До 10 мин']++;
+            } else if (responseTime <= 30) {
+                responseTimeRanges['10-30 мин']++;
+            } else if (responseTime <= 60) {
+                responseTimeRanges['30-60 мин']++;
+            } else {
+                responseTimeRanges['Более часа']++;
+            }
+        });
+
+        ['productsChart', 'responseTimeChart'].forEach(chartId => {
+            const chartElement = document.getElementById(chartId);
+            if (chartElement) {
+                chartElement.innerHTML = '';
+            }
+        });
+
+        const productsChartOptions = {
+            series: productChartData.map(item => item.count),
+            chart: {
+                type: 'donut',
+                height: 400
+            },
+            labels: productChartData.map(item => item.product),
+            legend: {
+                position: 'right',
+                offsetY: 0,
+                height: 350,
+                formatter: function(seriesName, opts) {
+                    const value = opts.w.globals.series[opts.seriesIndex];
+                    const total = opts.w.globals.series.reduce((a, b) => a + b, 0);
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return `${seriesName} - ${value} (${percentage}%)`;
+                }
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '70%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Всего заявок',
+                                formatter: function(w) {
+                                    return w.globals.series.reduce((a, b) => a + b, 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            colors: [
+                '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', 
+                '#6366f1', '#ec4899', '#14b8a6', '#8b5cf6',
+                '#64748b'
+            ]
+        };
+
+        const responseTimeChartOptions = {
+            series: [{
+                name: 'Количество заявок',
+                data: Object.values(responseTimeRanges)
+            }],
+            chart: {
+                type: 'bar',
+                height: 400,
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 8,
+                    dataLabels: {
+                        position: 'top'
+                    },
+                    distributed: true
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    const total = Object.values(responseTimeRanges).reduce((a, b) => a + b, 0);
+                    const percentage = ((val / total) * 100).toFixed(1);
+                    return `${val}\n(${percentage}%)`;
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '12px',
+                    colors: ["#304758"]
+                }
+            },
+            xaxis: {
+                categories: Object.keys(responseTimeRanges),
+                position: 'bottom',
+                labels: {
+                    style: {
+                        fontSize: '12px'
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Количество заявок',
+                    style: {
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        fontFamily: "'Inter', sans-serif",
+                        color: '#1e293b'
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: '0.875rem',
+                        fontFamily: "'Inter', sans-serif",
+                        colors: '#64748b'
+                    },
+                    formatter: (value) => Math.round(value)
+                }
+            },
+            colors: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444']
+        };
+
+        if (document.getElementById('productsChart')) {
+            const productsChart = new ApexCharts(
+                document.getElementById('productsChart'), 
+                productsChartOptions
+            );
+            await productsChart.render();
+        }
+
+        if (document.getElementById('responseTimeChart')) {
+            const responseTimeChart = new ApexCharts(
+                document.getElementById('responseTimeChart'), 
+                responseTimeChartOptions
+            );
+            await responseTimeChart.render();
+        }
+
+    } catch (error) {
+        console.error('Ошибка загрузки статистики:', error);
+        ['productsChart', 'responseTimeChart'].forEach(chartId => {
+            const chartElement = document.getElementById(chartId);
+            if (chartElement) {
+                chartElement.innerHTML = 'Ошибка загрузки графика';
+            }
         });
     }
 };
@@ -359,6 +559,16 @@ document.getElementById('showAllStaff')?.addEventListener('click', (e) => {
     setActiveButton(e.target);
     loadStaffList();
 });
+
+document.getElementById('showStatistics')?.addEventListener('click', (e) => {
+    const containers = document.querySelectorAll('#adminContent > div');
+    containers.forEach(el => el.classList.add('hidden'));
+    document.getElementById('statisticsContainer').classList.remove('hidden');
+    setActiveButton(e.target);
+    loadStatistics();
+});
+
+document.getElementById('applyStatsDateFilter')?.addEventListener('click', loadStatistics);
 
 document.getElementById('adminLogoutBtn')?.addEventListener('click', () => {
     localStorage.clear();
