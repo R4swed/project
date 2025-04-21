@@ -144,6 +144,11 @@ const loadStaffList = async () => {
                                     Закрытых заявок: ${employee.stats.completedTickets}
                                 </span>
                             </div>
+                            <div class="staff-actions">
+                                <button class="delete-staff-btn danger-button" data-staff-id="${employee.id}">
+                                    Удалить сотрудника
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -151,6 +156,23 @@ const loadStaffList = async () => {
 
             content.querySelectorAll('.staff-list-item').forEach(item => {
                 item.addEventListener('click', () => showStaffStats(item.dataset.staffId, item.dataset.staffEmail));
+            });
+
+            content.querySelectorAll('.delete-staff-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation(); 
+                    
+                    if (confirm('Вы действительно хотите удалить этого сотрудника?')) {
+                        try {
+                            const staffId = btn.dataset.staffId;
+                            await api.deleteStaff(staffId);
+                            await loadStaffList(); 
+                            alert('Сотрудник успешно удален');
+                        } catch (error) {
+                            alert(error.message || 'Ошибка при удалении сотрудника');
+                        }
+                    }
+                });
             });
         };
 
@@ -195,18 +217,30 @@ const loadStaffList = async () => {
             });
         }
 
+
         if (addStaffForm) {
             addStaffForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                const email = document.getElementById('staffEmail').value.trim();
+                const password = document.getElementById('staffPassword').value.trim();
+                const lastName = document.getElementById('staffLastName').value.trim();
+                const firstName = document.getElementById('staffFirstName').value.trim();
+
+                if (!email || !password || !lastName || !firstName) {
+                    alert('Пожалуйста, заполните все обязательные поля');
+                    return;
+                }
+
                 try {
                     const staffData = {
-                        email: document.getElementById('staffEmail').value,
-                        password: document.getElementById('staffPassword').value,
-                        last_name: document.getElementById('staffLastName').value,
-                        first_name: document.getElementById('staffFirstName').value,
-                        middle_name: document.getElementById('staffMiddleName').value
+                        email,
+                        password,
+                        last_name: lastName,
+                        first_name: firstName,
+                        middle_name: document.getElementById('staffMiddleName').value.trim()
                     };
-
+        
                     await api.addStaff(staffData);
                     addStaffModal.classList.add('hidden');
                     addStaffForm.reset();

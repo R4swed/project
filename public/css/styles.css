@@ -75,6 +75,14 @@ form {
     gap: 0.5rem;
 }
 
+.form-group label[for$="Email"]::after,
+.form-group label[for$="Password"]::after,
+.form-group label[for$="LastName"]::after,
+.form-group label[for$="FirstName"]::after {
+    content: " *";
+    color: #ef4444;
+}
+
 label {
     font-size: 0.875rem;
     color: #475569;
@@ -650,6 +658,9 @@ button:active {
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     min-height: 400px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .chart-container h4 {
@@ -666,7 +677,7 @@ button:active {
 
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: 1fr;
     gap: 2rem;
     margin-top: 2rem;
 }
@@ -832,6 +843,15 @@ button:active {
     padding: 1.5rem;
 }
 
+#addStaffForm input:invalid {
+    border-color: #ef4444;
+}
+
+#addStaffForm input:invalid:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
 #addStaffForm .form-group {
     display: flex;
     flex-direction: column;
@@ -940,6 +960,24 @@ button:active {
     border: 1px solid #e2e8f0;
 }
 
+.danger-button {
+    background-color: #dc2626;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+}
+
+.danger-button:hover {
+    background-color: #b91c1c;
+}
+
+.staff-actions {
+    margin-top: 1rem;
+}
 
 .analytics-item {
     display: flex;

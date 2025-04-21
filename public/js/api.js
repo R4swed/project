@@ -79,19 +79,6 @@ export const api = {
         if (!response.ok) throw new Error('Ошибка получения списка сотрудников');
         return response.json();
     },
-
-    async getAllUsers() {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/tickets/admin/users?' + new Date().getTime(), {
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
-        });
-        if (!response.ok) throw new Error('Ошибка получения списка пользователей');
-        return response.json();
-    },
     
     async createTicket(ticketData) {
         const token = localStorage.getItem('token');
@@ -241,6 +228,21 @@ export const api = {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Ошибка добавления сотрудника');
+        }
+        return response.json();
+    },
+
+    async deleteStaff(staffId) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/tickets/admin/staff/${staffId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка удаления сотрудника');
         }
         return response.json();
     }

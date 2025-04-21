@@ -390,5 +390,16 @@ export const queries = {
             [email, password, last_name, first_name, middle_name, 'support']
         );
         return result.rows[0];
+    },
+
+    async deleteStaff(staffId) {
+        const result = await pool.query(
+            'DELETE FROM users WHERE id = $1 AND role = $2 RETURNING id',
+            [staffId, 'support']
+        );
+        if (result.rows.length === 0) {
+            throw new Error('Сотрудник не найден');
+        }
+        return result.rows[0];
     }
 };

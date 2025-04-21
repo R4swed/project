@@ -211,4 +211,15 @@ router.post('/admin/add/staff', isAdmin, async (req, res) => {
     }
 });
 
+router.delete('/admin/staff/:id', isAdmin, async (req, res) => {
+    try {
+        const staffId = req.params.id;
+        await queries.deleteStaff(staffId);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Ошибка при удалении сотрудника:', error);
+        res.status(500).json({ error: 'Ошибка при удалении сотрудника' });
+    }
+});
+
 export default router;
