@@ -377,7 +377,10 @@ const displayTickets = (tickets) => {
     }
 
     container.innerHTML = tickets.map(ticket => `
-        <div class="ticket-item" data-ticket-id="${ticket.id}" data-subject="${ticket.subject}">
+        <div class="ticket-item" 
+             data-ticket-id="${ticket.id}" 
+             data-ticket-status="${ticket.status}"
+             data-subject="${ticket.subject}">
             <p><strong>Тема:</strong> ${ticket.subject || 'Без темы'}</p>
             <p><strong>Клиент:</strong> ${ticket.user_email}</p>
             <p><strong>Продукт:</strong> ${ticket.product ? productLocales[ticket.product] : 'Не указан'}</p>
@@ -389,10 +392,19 @@ const displayTickets = (tickets) => {
 
     container.querySelectorAll('.ticket-item').forEach(item => {
         item.addEventListener('click', () => {
+            const ticketId = item.dataset.ticketId;
+            const ticket = tickets.find(t => t.id === parseInt(ticketId));
+            
             showSection(elements.chatContainer);
             document.querySelector('#chatContainer h2').innerHTML = 
-                `Чат по заявке <span id="ticketId" class="hidden">${item.dataset.ticketId}</span>`;
-            window.loadChatMessages(item.dataset.ticketId);
+                `Чат по заявке ${ticket.subject}<span id="ticketId" class="hidden">${ticketId}</span>`;
+            
+            const takeTicketBtn = document.getElementById('takeTicketBtn');
+            if (takeTicketBtn) {
+                takeTicketBtn.classList.toggle('hidden', item.dataset.ticketStatus !== 'new');
+            }
+            
+            window.loadChatMessages(ticketId);
         });
     });
 };

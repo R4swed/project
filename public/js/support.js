@@ -92,6 +92,22 @@ const filterTickets = (tickets, filters) => {
     });
 };
 
+const renderTicket = (ticket) => {
+    const ticketElement = document.createElement('div');
+    ticketElement.className = 'ticket-item';
+    ticketElement.dataset.ticketId = ticket.id;
+    ticketElement.dataset.ticketStatus = ticket.status;
+    ticketElement.dataset.subject = ticket.subject;
+    ticketElement.innerHTML = `
+        <h3>${ticket.subject}</h3>
+        <p><strong>Компания:</strong> ${ticket.company || 'Не указана'}</p>
+        <p><strong>Email:</strong> ${ticket.email}</p>
+        <p><strong>Продукт:</strong> ${ticket.product ? productLocales[ticket.product] : 'Не указан'}</p>
+        <p><strong>Статус:</strong> ${statusLocales[ticket.status]}</p>
+        <p><strong>Создан:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
+    `;
+    return ticketElement;
+};
 
 const displayTickets = (tickets, container) => {
     if (!tickets.length) {
@@ -105,7 +121,7 @@ const displayTickets = (tickets, container) => {
         item.addEventListener('click', () => {
             showSection(elements.chatContainer);
             document.querySelector('#chatContainer h2').innerHTML = 
-                `Чат по заявке <span id="ticketId" class="hidden">${item.dataset.ticketId}</span>`;
+                `Чат по заявке ${item.dataset.subject}<span id="ticketId" class="hidden">${item.dataset.ticketId}</span>`;
             
             const takeTicketBtn = document.getElementById('takeTicketBtn');
             if (takeTicketBtn) {
@@ -115,22 +131,6 @@ const displayTickets = (tickets, container) => {
             window.loadChatMessages(item.dataset.ticketId);
         });
     });
-};
-
-const renderTicket = (ticket) => {
-    const ticketElement = document.createElement('div');
-    ticketElement.className = 'ticket-item';
-    ticketElement.dataset.ticketId = ticket.id;
-    ticketElement.dataset.ticketStatus = ticket.status;
-    ticketElement.innerHTML = `
-        <h3>${ticket.subject}</h3>
-        <p><strong>Компания:</strong> ${ticket.company || 'Не указана'}</p>
-        <p><strong>Email:</strong> ${ticket.email}</p>
-        <p><strong>Продукт:</strong> ${ticket.product ? productLocales[ticket.product] : 'Не указан'}</p>
-        <p><strong>Статус:</strong> ${statusLocales[ticket.status]}</p>
-        <p><strong>Создан:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
-    `;
-    return ticketElement;
 };
 
 export const initSupport = () => {    

@@ -192,25 +192,25 @@ export const queries = {
 
     async getTicketsAnalytics(dateFrom = null, dateTo = null) {
         const query = `
-            WITH first_responses AS (
-                SELECT 
-                    t.id as ticket_id,
-                    t.created_at as ticket_created,
-                    t.support_id,
-                    MIN(c.created_at) as first_response,
-                    t.status,
-                    CASE 
-                        WHEN MIN(c.created_at) IS NULL AND 
-                             EXTRACT(EPOCH FROM (NOW() - t.created_at))/60 > 10 THEN true
-                        WHEN MIN(c.created_at) IS NOT NULL AND 
-                             EXTRACT(EPOCH FROM (MIN(c.created_at) - t.created_at))/60 > 10 THEN true
-                        ELSE false
-                    END as is_response_overdue,
-                    CASE 
-                        WHEN t.status != 'completed' AND 
-                             EXTRACT(EPOCH FROM (NOW() - t.created_at))/3600 > 24 THEN true
-                        ELSE false
-                    END as is_resolution_overdue
+             WITH first_responses AS (
+            SELECT 
+                t.id as ticket_id,
+                t.created_at as ticket_created,
+                t.support_id,
+                MIN(c.created_at) as first_response,
+                t.status,
+                CASE 
+                    WHEN MIN(c.created_at) IS NULL AND 
+                         EXTRACT(EPOCH FROM (NOW() - t.created_at))/60 > 30 THEN true
+                    WHEN MIN(c.created_at) IS NOT NULL AND 
+                         EXTRACT(EPOCH FROM (MIN(c.created_at) - t.created_at))/60 > 30 THEN true
+                    ELSE false
+                END as is_response_overdue,
+                CASE 
+                    WHEN t.status != 'completed' AND 
+                         EXTRACT(EPOCH FROM (NOW() - t.created_at))/3600 > 24 THEN true
+                    ELSE false
+                END as is_resolution_overdue
                 FROM tickets t
                 LEFT JOIN chats c ON c.ticket_id = t.id 
                     AND c.sender_id = t.support_id
