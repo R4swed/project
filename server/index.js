@@ -7,6 +7,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import authRoutes from './routes/authRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import authMiddleware from './middleware/authMiddleware.js';
 import { chatRoutes } from './routes/chatRoutes.js';
 
@@ -21,6 +22,7 @@ app.use(express.static(join(dirname(fileURLToPath(import.meta.url)), '../public'
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', authMiddleware, ticketRoutes);
 app.use('/api/chats', authMiddleware, chatRoutes);
+app.use('/api/admin', authMiddleware, adminRoutes);
 
 const io = new Server(httpServer, {
     cors: {

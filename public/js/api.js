@@ -56,7 +56,7 @@ export const api = {
 
     async getAllTickets() {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/tickets/admin/all?' + new Date().getTime(), {
+        const response = await fetch('/api/admin/all?' + new Date().getTime(), {
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Cache-Control': 'no-cache',
@@ -69,7 +69,7 @@ export const api = {
     
     async getAllStaff() {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/tickets/admin/staff?' + new Date().getTime(), {
+        const response = await fetch('/api/admin/staff?' + new Date().getTime(), {
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Cache-Control': 'no-cache',
@@ -173,7 +173,7 @@ export const api = {
 
     async getAnalytics(dateFrom = null, dateTo = null) {
         const token = localStorage.getItem('token');
-        let url = '/api/tickets/admin/analytics';
+        let url = '/api/admin/analytics';
         
         if (dateFrom || dateTo) {
             const params = new URLSearchParams();
@@ -195,7 +195,7 @@ export const api = {
 
     async getStaffAnalytics(dateFrom = null, dateTo = null) {
         const token = localStorage.getItem('token');
-        let url = '/api/tickets/admin/staff-analytics';
+        let url = '/api/admin/staff-analytics';
         
         if (dateFrom || dateTo) {
             const params = new URLSearchParams();
@@ -217,7 +217,7 @@ export const api = {
 
     async addStaff(staffData) {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/tickets/admin/add/staff', {
+        const response = await fetch('/api/admin/add/staff', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ export const api = {
 
     async deleteStaff(staffId) {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/tickets/admin/staff/${staffId}`, {
+        const response = await fetch(`/api/admin/staff/${staffId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
