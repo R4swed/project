@@ -108,20 +108,6 @@ export const api = {
         return response.json();
     },
 
-    async updateTicketStatus(ticketId, status) {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/tickets/${ticketId}/status`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ status })
-        });
-        if (!response.ok) throw new Error('Ошибка обновления статуса');
-        return response.json();
-    },
-
     async takeTicketInProgress(ticketId) {
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/tickets/${ticketId}/status`, {
@@ -150,24 +136,6 @@ export const api = {
             const error = await response.json();
             throw new Error(error.error || 'Ошибка завершения тикета');
         }
-        return response.json();
-    },
-
-    async getChatMessages(ticketId) {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/chats/${ticketId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Ошибка получения сообщений');
-        return response.json();
-    },
-
-    async getTicket(ticketId) {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/tickets/${ticketId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Ошибка получения тикета');
         return response.json();
     },
 

@@ -421,8 +421,6 @@ const loadAnalytics = async (dateFrom = null, dateTo = null) => {
         document.getElementById('completedTickets').textContent = analytics.completed_tickets || '0';
         document.getElementById('overdueResponseRate').textContent = 
             `${analytics.overdue_response_rate || 0}%`;
-        document.getElementById('overdueResolutionRate').textContent = 
-            `${analytics.overdue_resolution_rate || 0}%`;
         
         const avgTime = analytics.avg_response_time;
         let timeDisplay = 'Нет данных';
@@ -460,17 +458,37 @@ const loadStatistics = async () => {
         const dateFrom = document.getElementById('adminDateFromFilter')?.value;
         const dateTo = document.getElementById('adminDateToFilter')?.value;
 
+        const filteredTickets = allTicketsCache.filter(ticket => {
+            const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
+            const matchesDateFrom = !dateFrom || ticketDate >= new Date(dateFrom).setHours(0, 0, 0, 0);
+            const matchesDateTo = !dateTo || ticketDate <= new Date(dateTo).setHours(23, 59, 59, 999);
+            return matchesDateFrom && matchesDateTo;
+        });
+
+        if (!filteredTickets.length) {
+            document.getElementById('statisticsContainer').innerHTML = `
+                <div class="no-data-message">Отсутствуют данные за выбранный период</div>
+            `;
+            return;
+        }
+
+        document.getElementById('statisticsContainer').innerHTML = `
+            <div class="chart-container">
+                <h4>Распределение заявок по продуктам</h4>
+                <div id="productsChart"></div>
+            </div>
+            <div class="chart-container">
+                <h4>Распределение по времени ответа</h4>
+                <div id="responseTimeChart"></div>
+            </div>
+        `;
+
         const productChartData = Object.keys(productLocales)
             .map(key => ({
                 product: productLocales[key],
-                count: allTicketsCache.filter(ticket => {
-                    const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
-                    const matchesDateFrom = !dateFrom || ticketDate >= new Date(dateFrom).setHours(0, 0, 0, 0);
-                    const matchesDateTo = !dateTo || ticketDate <= new Date(dateTo).setHours(23, 59, 59, 999);
-                    return ticket.product === key && matchesDateFrom && matchesDateTo;
-                }).length
+                count: filteredTickets.filter(ticket => ticket.product === key).length
             }))
-            .filter(item => item.count > 0) 
+            .filter(item => item.count > 0)
             .sort((a, b) => b.count - a.count);
 
         const responseTimeRanges = {
@@ -479,13 +497,6 @@ const loadStatistics = async () => {
             '30-60 мин': 0,
             'Более часа': 0
         };
-
-        const filteredTickets = allTicketsCache.filter(ticket => {
-            const ticketDate = new Date(ticket.created_at).setHours(0, 0, 0, 0);
-            const matchesDateFrom = !dateFrom || ticketDate >= new Date(dateFrom).setHours(0, 0, 0, 0);
-            const matchesDateTo = !dateTo || ticketDate <= new Date(dateTo).setHours(23, 59, 59, 999);
-            return matchesDateFrom && matchesDateTo;
-        });
 
         filteredTickets.forEach(ticket => {
             const responseTime = ticket.response_time || 0;
@@ -500,132 +511,134 @@ const loadStatistics = async () => {
             }
         });
 
-        ['productsChart', 'responseTimeChart'].forEach(chartId => {
-            const chartElement = document.getElementById(chartId);
-            if (chartElement) {
-                chartElement.innerHTML = '';
-            }
-        });
+        const hasProductData = productChartData.length > 0;
+        const hasResponseTimeData = Object.values(responseTimeRanges).some(value => value > 0);
 
-        const productsChartOptions = {
-            series: productChartData.map(item => item.count),
-            chart: {
-                type: 'donut',
-                height: 400
-            },
-            labels: productChartData.map(item => item.product),
-            legend: {
-                position: 'right',
-                offsetY: 0,
-                height: 350,
-                formatter: function(seriesName, opts) {
-                    const value = opts.w.globals.series[opts.seriesIndex];
-                    const total = opts.w.globals.series.reduce((a, b) => a + b, 0);
-                    const percentage = ((value / total) * 100).toFixed(1);
-                    return `${seriesName} - ${value} (${percentage}%)`;
+        if (!hasProductData && !hasResponseTimeData) {
+            ['productsChart', 'responseTimeChart'].forEach(chartId => {
+                const chartElement = document.getElementById(chartId);
+                if (chartElement) {
+                    chartElement.innerHTML = '<div class="no-data-message">Отсутствуют данные за выбранный период</div>';
                 }
-            },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '70%',
-                        labels: {
-                            show: true,
-                            total: {
-                                show: true,
-                                label: 'Всего заявок',
-                                formatter: function(w) {
-                                    return w.globals.series.reduce((a, b) => a + b, 0);
+            });
+            return;
+        }
+
+        if (productChartData.length > 0) {
+            const productsChart = new ApexCharts(
+                document.getElementById('productsChart'),
+                {
+                    series: productChartData.map(item => item.count),
+                    chart: {
+                        type: 'donut',
+                        height: 400
+                    },
+                    labels: productChartData.map(item => item.product),
+                    legend: {
+                        position: 'right',
+                        offsetY: 0,
+                        height: 350,
+                        formatter: function(seriesName, opts) {
+                            const value = opts.w.globals.series[opts.seriesIndex];
+                            const total = opts.w.globals.series.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${seriesName} - ${value} (${percentage}%)`;
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '70%',
+                                labels: {
+                                    show: true,
+                                    total: {
+                                        show: true,
+                                        label: 'Всего заявок',
+                                        formatter: function(w) {
+                                            return w.globals.series.reduce((a, b) => a + b, 0);
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                }
-            },
-            colors: [
-                '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', 
-                '#6366f1', '#ec4899', '#14b8a6', '#8b5cf6',
-                '#64748b'
-            ]
-        };
-
-        const responseTimeChartOptions = {
-            series: [{
-                name: 'Количество заявок',
-                data: Object.values(responseTimeRanges)
-            }],
-            chart: {
-                type: 'bar',
-                height: 400,
-                toolbar: {
-                    show: false
-                }
-            },
-            plotOptions: {
-                bar: {
-                    borderRadius: 8,
-                    dataLabels: {
-                        position: 'top'
                     },
-                    distributed: true
+                    colors: [
+                        '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', 
+                        '#6366f1', '#ec4899', '#14b8a6', '#8b5cf6',
+                        '#64748b'
+                    ]
                 }
-            },
-            dataLabels: {
-                enabled: true,
-                formatter: function(val) {
-                    const total = Object.values(responseTimeRanges).reduce((a, b) => a + b, 0);
-                    const percentage = ((val / total) * 100).toFixed(1);
-                    return `${val}\n(${percentage}%)`;
-                },
-                offsetY: -20,
-                style: {
-                    fontSize: '12px',
-                    colors: ["#304758"]
-                }
-            },
-            xaxis: {
-                categories: Object.keys(responseTimeRanges),
-                position: 'bottom',
-                labels: {
-                    style: {
-                        fontSize: '12px'
-                    }
-                }
-            },
-            yaxis: {
-                title: {
-                    text: 'Количество заявок',
-                    style: {
-                        fontSize: '1rem',
-                        fontWeight: 500,
-                        fontFamily: "'Inter', sans-serif",
-                        color: '#1e293b'
-                    }
-                },
-                labels: {
-                    style: {
-                        fontSize: '0.875rem',
-                        fontFamily: "'Inter', sans-serif",
-                        colors: '#64748b'
-                    },
-                    formatter: (value) => Math.round(value)
-                }
-            },
-            colors: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444']
-        };
-
-        if (document.getElementById('productsChart')) {
-            const productsChart = new ApexCharts(
-                document.getElementById('productsChart'), 
-                productsChartOptions
             );
             await productsChart.render();
         }
-
-        if (document.getElementById('responseTimeChart')) {
+        
+        if (Object.values(responseTimeRanges).some(value => value > 0)) {
             const responseTimeChart = new ApexCharts(
-                document.getElementById('responseTimeChart'), 
-                responseTimeChartOptions
+                document.getElementById('responseTimeChart'),
+                {
+                    series: [{
+                        name: 'Количество заявок',
+                        data: Object.values(responseTimeRanges)
+                    }],
+                    chart: {
+                        type: 'bar',
+                        height: 400,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 8,
+                            dataLabels: {
+                                position: 'top'
+                            },
+                            distributed: true
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function(val) {
+                            const total = Object.values(responseTimeRanges).reduce((a, b) => a + b, 0);
+                            const percentage = ((val / total) * 100).toFixed(1);
+                            return `${val}\n(${percentage}%)`;
+                        },
+                        offsetY: -20,
+                        style: {
+                            fontSize: '12px',
+                            colors: ["#304758"]
+                        }
+                    },
+                    xaxis: {
+                        categories: Object.keys(responseTimeRanges),
+                        position: 'bottom',
+                        labels: {
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Количество заявок',
+                            style: {
+                                fontSize: '1rem',
+                                fontWeight: 500,
+                                fontFamily: "'Inter', sans-serif",
+                                color: '#1e293b'
+                            }
+                        },
+                        labels: {
+                            style: {
+                                fontSize: '0.875rem',
+                                fontFamily: "'Inter', sans-serif",
+                                colors: '#64748b'
+                            },
+                            formatter: (value) => Math.round(value)
+                        }
+                    },
+                    colors: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444']
+                }
             );
             await responseTimeChart.render();
         }

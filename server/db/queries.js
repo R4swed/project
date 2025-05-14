@@ -9,6 +9,14 @@ export const queries = {
         return result.rows[0];
     },
 
+    async createTicket({ company, email, product, subject, description, userId }) {
+        const result = await pool.query(
+            'INSERT INTO tickets (company, email, product, subject, description, user_id, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, \'new\', CURRENT_TIMESTAMP) RETURNING id, company, email, product, subject, description, user_id, status, created_at',
+            [company, email, product, subject, description, userId]
+        );
+        return result.rows[0];
+    },
+
     async getAllSupportStaff() {
         const query = `
             SELECT 
@@ -27,27 +35,9 @@ export const queries = {
         return result.rows;
     },
 
-    async getAllUsers() {
-        const query = `
-            SELECT id, email, role, created_at
-            FROM users
-            ORDER BY created_at DESC
-        `;
-        const result = await pool.query(query);
-        return result.rows;
-    },
-
     async getUserByEmail(email) {
         const result = await pool.query('SELECT id, email, password_hash, role FROM users WHERE email = $1', [email]);
         return result.rows[0] || null;
-    },
-
-    async createTicket({ company, email, product, subject, description, userId }) {
-        const result = await pool.query(
-            'INSERT INTO tickets (company, email, product, subject, description, user_id, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, \'new\', CURRENT_TIMESTAMP) RETURNING id, company, email, product, subject, description, user_id, status, created_at',
-            [company, email, product, subject, description, userId]
-        );
-        return result.rows[0];
     },
 
     async getTicketsByUserId(userId) {
@@ -192,31 +182,23 @@ export const queries = {
 
     async getTicketsAnalytics(dateFrom = null, dateTo = null) {
         const query = `
-             WITH first_responses AS (
-            SELECT 
-                t.id as ticket_id,
-                t.created_at as ticket_created,
-                t.support_id,
-                MIN(c.created_at) as first_response,
-                t.status,
-                CASE 
-                    WHEN MIN(c.created_at) IS NULL AND 
-                         EXTRACT(EPOCH FROM (NOW() - t.created_at))/60 > 30 THEN true
-                    WHEN MIN(c.created_at) IS NOT NULL AND 
-                         EXTRACT(EPOCH FROM (MIN(c.created_at) - t.created_at))/60 > 30 THEN true
-                    ELSE false
-                END as is_response_overdue,
-                CASE 
-                    WHEN t.status != 'completed' AND 
-                         EXTRACT(EPOCH FROM (NOW() - t.created_at))/3600 > 24 THEN true
-                    ELSE false
-                END as is_resolution_overdue
+            WITH first_responses AS (
+                SELECT 
+                    t.id as ticket_id,
+                    t.created_at as ticket_created,
+                    t.support_id,
+                    MIN(c.created_at) as first_response,
+                    t.status,
+                    CASE 
+                        WHEN MIN(c.created_at) IS NULL AND 
+                             EXTRACT(EPOCH FROM (NOW() - t.created_at))/3600 > 24 THEN true
+                        WHEN MIN(c.created_at) IS NOT NULL AND 
+                             EXTRACT(EPOCH FROM (MIN(c.created_at) - t.created_at))/3600 > 24 THEN true
+                        ELSE false
+                    END as is_response_overdue
                 FROM tickets t
                 LEFT JOIN chats c ON c.ticket_id = t.id 
                     AND c.sender_id = t.support_id
-                WHERE 1=1
-                    ${dateFrom ? `AND DATE_TRUNC('day', t.created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
-                    ${dateTo ? `AND DATE_TRUNC('day', t.created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
                 GROUP BY t.id, t.created_at, t.support_id, t.status
             )
             SELECT 
@@ -246,11 +228,7 @@ export const queries = {
                 ROUND(
                     COUNT(DISTINCT CASE WHEN fr.is_response_overdue THEN t.id END)::FLOAT * 100 / 
                     NULLIF(COUNT(DISTINCT t.id), 0)
-                ) as overdue_response_rate,
-                ROUND(
-                    COUNT(DISTINCT CASE WHEN fr.is_resolution_overdue THEN t.id END)::FLOAT * 100 / 
-                    NULLIF(COUNT(DISTINCT t.id), 0)
-                ) as overdue_resolution_rate
+                ) as overdue_response_rate
             FROM tickets t
             LEFT JOIN first_responses fr ON t.id = fr.ticket_id
             WHERE 1=1
@@ -264,30 +242,6 @@ export const queries = {
         
         const result = await pool.query(query, params);
         return result.rows[0];
-    },
-
-    async getAnalytics(dateFrom = null, dateTo = null) {
-        const query = `
-            WITH stats AS (
-                // ...existing analytics query...
-            ),
-            product_stats AS (
-                SELECT 
-                    product,
-                    COUNT(*) as count
-                FROM tickets
-                WHERE 1=1
-                    ${dateFrom ? `AND DATE_TRUNC('day', created_at) >= DATE_TRUNC('day', $1::timestamp)` : ''}
-                    ${dateTo ? `AND DATE_TRUNC('day', created_at) <= DATE_TRUNC('day', ${dateFrom ? '$2' : '$1'}::timestamp)` : ''}
-                GROUP BY product
-            )
-            SELECT 
-                s.*,
-                json_agg(json_build_object('product', ps.product, 'count', ps.count)) as products_distribution
-            FROM stats s
-            LEFT JOIN product_stats ps ON 1=1
-            GROUP BY s.*;
-        `;
     },
 
     async getStaffAnalytics(dateFrom = null, dateTo = null) {
@@ -356,30 +310,6 @@ export const queries = {
         
         const result = await pool.query(query, params);
         return result.rows;
-    },
-
-    async updateResetToken(userId, resetToken, resetTokenExpires) {
-        const result = await pool.query(
-            'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3 RETURNING *',
-            [resetToken, resetTokenExpires, userId]
-        );
-        return result.rows[0];
-    },
-
-    async getUserByResetToken(resetToken) {
-        const result = await pool.query(
-            'SELECT * FROM users WHERE reset_token = $1',
-            [resetToken]
-        );
-        return result.rows[0];
-    },
-
-    async updateUserPassword(userId, passwordHash) {
-        const result = await pool.query(
-            'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2 RETURNING *',
-            [passwordHash, userId]
-        );
-        return result.rows[0];
     },
 
     async createStaff({ email, password, last_name, first_name, middle_name, role }) {

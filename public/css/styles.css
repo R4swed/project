@@ -377,6 +377,44 @@ button:active {
     min-width: 150px;
 }
 
+.no-data-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    padding: 2rem;
+    background-color: #f8fafc;
+    border-radius: 0.5rem;
+    color: #64748b;
+    font-size: 1.125rem;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.loading-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    color: #3b82f6;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.error-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    padding: 2rem;
+    background-color: #fef2f2;
+    border-radius: 0.5rem;
+    color: #ef4444;
+    font-size: 1.125rem;
+    text-align: center;
+    margin: 1rem 0;
+}
+
 .client-filters .date-filter {
     flex: 2;
     display: flex;
@@ -637,7 +675,22 @@ button:active {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
 }
+
+.analytics-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 
 .statistics-cards {
     display: flex;
@@ -661,13 +714,15 @@ button:active {
     max-width: 900px;
     margin: 0 auto;
     width: 100%;
+    margin-bottom: 2rem;
 }
 
 .chart-container h4 {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     color: #1e293b;
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 500;
+    text-align: center;
 }
 
 .chart-card {
@@ -768,24 +823,8 @@ button:active {
     font-size: 1rem;
 }
 
-.analytics-card.new-tickets {
-    border-color: #f87171;
-}
-
-.analytics-card.in-progress-tickets {
-    border-color: #fbbf24;
-}
-
-.analytics-card.completed-tickets {
-    border-color: #34d399;
-}
-
 .analytics-card:hover {
     transform: translateY(-2px);
-}
-
-.analytics-card.overdue-card {
-    border-left: 4px solid #ef4444;
 }
 
 .analytics-card.overdue-card h4 {
@@ -808,6 +847,9 @@ button:active {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
 }
 
 #addStaffBtn {
