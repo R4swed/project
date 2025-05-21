@@ -3,7 +3,6 @@ import { api } from './api.js';
 import { currentTicketStatus } from './support.js';
 
 let socket;
-let currentTicketId = null;
 
 export const initChat = () => {
     
@@ -69,6 +68,7 @@ export const initChat = () => {
         }
     }
 
+
     const attachFileBtn = document.getElementById('attachFileBtn');
     const fileInput = document.getElementById('fileInput');
 
@@ -121,13 +121,7 @@ const canSendMessage = (userRole, ticketStatus) => {
 };
 
 const loadChatMessages = async (ticketId) => {
-    if (currentTicketId) {
-        socket.emit('leave-ticket', currentTicketId);
-    }
-
-    currentTicketId = ticketId;
     socket.emit('join-ticket', ticketId);
-
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
     
@@ -135,44 +129,33 @@ const loadChatMessages = async (ticketId) => {
     if (!token) return;
 
     try {
-        const [userResponse, ticketResponse, messagesResponse, participantsResponse] = await Promise.all([
-            fetch('/api/auth/me', {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Cache-Control': 'no-cache'
-                }
-            }),
-            fetch(`/api/tickets/${ticketId}`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Cache-Control': 'no-cache'
-                }
-            }),
-            fetch(`/api/chats/${ticketId}`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Cache-Control': 'no-cache'
-                }
-            }),
-            fetch(`/api/tickets/${ticketId}/participants`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Cache-Control': 'no-cache'
-                }
-            })
-        ]);
+        const userResponse = await fetch('/api/auth/me', {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!userResponse.ok) throw new Error('Ошибка получения данных пользователя');
+        const currentUser = await userResponse.json();
 
-        if (!userResponse.ok || !ticketResponse.ok || !messagesResponse.ok || !participantsResponse.ok) {
-            throw new Error('Ошибка загрузки данных чата');
-        }
+        const ticketResponse = await fetch(`/api/tickets/${ticketId}`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!ticketResponse.ok) throw new Error('Ошибка получения данных тикета');
 
-        const [currentUser, ticketInfo, messages, participants] = await Promise.all([
-            userResponse.json(),
-            ticketResponse.json(),
-            messagesResponse.json(),
-            participantsResponse.json()
-        ]);
+        const messagesResponse = await fetch(`/api/chats/${ticketId}`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'
+            }
+        });
 
+        const ticketInfo = await ticketResponse.json();
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
         const takeTicketBtn = document.getElementById('takeTicketBtn');
@@ -187,6 +170,19 @@ const loadChatMessages = async (ticketId) => {
                 completeTicketBtn.classList.toggle('hidden', ticketInfo.status !== 'in_progress');
             }
         }
+
+        if (!messagesResponse.ok) throw new Error('Ошибка получения сообщений');
+        const messages = await messagesResponse.json();
+        
+        const participantsResponse = await fetch(`/api/tickets/${ticketId}/participants`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!participantsResponse.ok) throw new Error('Ошибка получения участников');
+        const participants = await participantsResponse.json();
         
         chatMessages.innerHTML = '';
         

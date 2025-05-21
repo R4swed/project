@@ -1,32 +1,12 @@
-const cache = {
-    data: new Map(),
-    timestamp: new Map(),
-    TTL: 5 * 60 * 1000, // 5 минут
-    async get(key) {
-        const data = this.data.get(key);
-        const timestamp = this.timestamp.get(key);
-        if (data && timestamp && (Date.now() - timestamp) < this.TTL) {
-            return data;
-        }
-        return null;
-    },
-    set(key, data) {
-        this.data.set(key, data);
-        this.timestamp.set(key, Date.now());
-    },
-    clear() {
-        this.data.clear();
-        this.timestamp.clear();
-    }
-};
-
 export const api = {
     async login(email, password) {
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
                 },
                 body: JSON.stringify({ email, password })
             });
@@ -62,54 +42,42 @@ export const api = {
     },
 
     async getTickets(status) {
-        const cacheKey = `tickets-${status}`;
-        const cachedData = await cache.get(cacheKey);
-        if (cachedData) return cachedData;
-
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/tickets?filter=${status}`, {
             headers: { 
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
         });
         if (!response.ok) throw new Error('Ошибка получения тикетов');
-        const data = await response.json();
-        cache.set(cacheKey, data);
-        return data;
+        return response.json();
     },
 
     async getAllTickets() {
-        const cacheKey = 'all-tickets';
-        const cachedData = await cache.get(cacheKey);
-        if (cachedData) return cachedData;
-
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/admin/all', {
+        const response = await fetch('/api/admin/all?' + new Date().getTime(), {
             headers: { 
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
         });
         if (!response.ok) throw new Error('Ошибка получения тикетов');
-        const data = await response.json();
-        cache.set(cacheKey, data);
-        return data;
+        return response.json();
     },
     
     async getAllStaff() {
-        const cacheKey = 'all-staff';
-        const cachedData = await cache.get(cacheKey);
-        if (cachedData) return cachedData;
-
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/admin/staff', {
+        const response = await fetch('/api/admin/staff?' + new Date().getTime(), {
             headers: { 
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
         });
         if (!response.ok) throw new Error('Ошибка получения списка сотрудников');
-        const data = await response.json();
-        cache.set(cacheKey, data);
-        return data;
+        return response.json();
     },
     
     async createTicket(ticketData) {
@@ -123,7 +91,6 @@ export const api = {
             body: JSON.stringify(ticketData)
         });
         if (!response.ok) throw new Error('Ошибка создания тикета');
-        cache.clear(); // Инвалидируем кэш после создания тикета
         return response.json();
     },
 
@@ -152,7 +119,6 @@ export const api = {
             body: JSON.stringify({ status: 'in_progress' })
         });
         if (!response.ok) throw new Error('Ошибка обновления статуса');
-        cache.clear(); // Инвалидируем кэш после изменения статуса
         return response.json();
     },
     
@@ -170,15 +136,10 @@ export const api = {
             const error = await response.json();
             throw new Error(error.error || 'Ошибка завершения тикета');
         }
-        cache.clear(); // Инвалидируем кэш после завершения тикета
         return response.json();
     },
 
     async getAnalytics(dateFrom = null, dateTo = null) {
-        const cacheKey = `analytics-${dateFrom}-${dateTo}`;
-        const cachedData = await cache.get(cacheKey);
-        if (cachedData) return cachedData;
-
         const token = localStorage.getItem('token');
         let url = '/api/admin/analytics';
         
@@ -189,22 +150,18 @@ export const api = {
             url += '?' + params.toString();
         }
         
-        const response = await fetch(url, {
+        const response = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime(), {
             headers: { 
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
         });
         if (!response.ok) throw new Error('Ошибка получения аналитики');
-        const data = await response.json();
-        cache.set(cacheKey, data);
-        return data;
+        return response.json();
     },
 
     async getStaffAnalytics(dateFrom = null, dateTo = null) {
-        const cacheKey = `staff-analytics-${dateFrom}-${dateTo}`;
-        const cachedData = await cache.get(cacheKey);
-        if (cachedData) return cachedData;
-
         const token = localStorage.getItem('token');
         let url = '/api/admin/staff-analytics';
         
@@ -215,15 +172,15 @@ export const api = {
             url += '?' + params.toString();
         }
         
-        const response = await fetch(url, {
+        const response = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime(), {
             headers: { 
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
         });
         if (!response.ok) throw new Error('Ошибка получения статистики сотрудников');
-        const data = await response.json();
-        cache.set(cacheKey, data);
-        return data;
+        return response.json();
     },
 
     async addStaff(staffData) {
@@ -240,7 +197,6 @@ export const api = {
             const error = await response.json();
             throw new Error(error.error || 'Ошибка добавления сотрудника');
         }
-        cache.clear(); // Инвалидируем кэш после добавления сотрудника
         return response.json();
     },
 
@@ -256,7 +212,6 @@ export const api = {
             const error = await response.json();
             throw new Error(error.error || 'Ошибка удаления сотрудника');
         }
-        cache.clear(); // Инвалидируем кэш после удаления сотрудника
         return response.json();
     }
 };

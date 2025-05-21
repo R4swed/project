@@ -28,12 +28,8 @@ app.use('/api/admin', authMiddleware, adminRoutes);
 const io = new Server(httpServer, {
     cors: {
         origin: "*",
-        methods: ["GET", "POST"],
-        transports: ['websocket', 'polling'],
-        credentials: true
-    },
-    allowEIO3: true,
-    path: '/socket.io/'
+        methods: ["GET", "POST"]
+    }
 });
 
 io.on('connection', socket => {

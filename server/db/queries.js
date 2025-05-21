@@ -153,15 +153,10 @@ export const queries = {
     },
 
     async getChatMessages(ticketId) {
-        const query = `
-            SELECT c.id, c.ticket_id, c.sender_id, c.message, c.created_at,
-                   u.role as sender_role
-            FROM chats c
-            LEFT JOIN users u ON c.sender_id = u.id
-            WHERE c.ticket_id = $1
-            ORDER BY c.created_at ASC
-        `;
-        const result = await pool.query(query, [ticketId]);
+        const result = await pool.query(
+            'SELECT id, ticket_id, sender_id, message, created_at FROM chats WHERE ticket_id = $1 ORDER BY created_at ASC',
+            [ticketId]
+        );
         return result.rows;
     },
 
