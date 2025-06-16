@@ -709,19 +709,20 @@ button:active {
     background: white;
     border-radius: 8px;
     padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
     min-height: 400px;
     max-width: 900px;
     margin: 0 auto;
     width: 100%;
     margin-bottom: 2rem;
+    overflow: hidden;
 }
 
 .chart-container h4 {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     color: #1e293b;
-    font-size: 1.125rem;
-    font-weight: 500;
+    font-size: 1.1rem;
+    font-weight: 600;
     text-align: center;
 }
 
@@ -1241,6 +1242,26 @@ button:active {
     .message img, 
     .message video {
         max-width: 100%;
+    }
+    .chart-container {
+        min-height: 500px; 
+        padding: 1rem;
+    }
+    
+    .chart-container h4 {
+        font-size: 1rem;
+    }
+
+    .apexcharts-legend {
+        padding: 0 !important;
+        margin-top: 15px !important;
+    }
+
+    .apexcharts-legend-series {
+        margin: 3px 0;
+    }
+    #productsChart {
+        margin-bottom: 60px; 
     }
 }
 

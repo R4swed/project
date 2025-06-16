@@ -1,8 +1,26 @@
 import { showSection, elements } from './utils.js';
 import { showSupportDashboard } from './support.js';
 import { showTicketListOrForm } from './tickets.js';
-import {showAdminDashboard} from './admin.js';
+import { showAdminDashboard } from './admin.js';
 import { api } from './api.js';
+
+export const checkAuthState = () => {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token || !user) {
+        showSection(elements.loginForm);
+        return;
+    }
+
+    if (user.role === 'admin') {
+        showAdminDashboard();
+    } else if (user.role === 'support') {
+        showSupportDashboard();
+    } else {
+        showTicketListOrForm();
+    }
+};
 
 export const initAuth = () => {
     elements.loginForm?.querySelector('form').addEventListener('submit', async (e) => {
@@ -68,77 +86,9 @@ export const initAuth = () => {
         showSection(elements.loginForm);
     });
 
-    const showResetPassword = document.getElementById('show-reset-password');
-    const showLoginFromReset = document.getElementById('show-login-from-reset');
-    const resetPasswordRequestForm = document.getElementById('resetPasswordRequestForm')?.querySelector('form');
-    const resetPasswordConfirmForm = document.getElementById('resetPasswordConfirmForm')?.querySelector('form');
-
-    showResetPassword?.addEventListener('click', (e) => {
-        e.preventDefault();
-        showSection(elements.resetPasswordForm);
-        elements.resetPasswordRequestForm.classList.remove('hidden');
-        elements.resetPasswordConfirmForm.classList.add('hidden');
-    });
-
-    showLoginFromReset?.addEventListener('click', (e) => {
-        e.preventDefault();
-        showSection(elements.loginForm);
-    });
-
-    resetPasswordRequestForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('reset-email').value;
-        
-        if (!email) {
-            alert('Пожалуйста, введите email');
-            return;
-        }
-
-        try {
-            await api.requestPasswordReset(email);
-            alert('На ваш email отправлены инструкции по восстановлению пароля');
-            showSection(elements.loginForm);
-        } catch (error) {
-            alert(error.message || 'Ошибка при отправке запроса на восстановление пароля');
-        }
-    });
-
-    resetPasswordConfirmForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const newPassword = document.getElementById('new-password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
-
-        if (!newPassword || !confirmPassword) {
-            alert('Пожалуйста, заполните все поля');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            alert('Пароли не совпадают');
-            return;
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('reset_token');
-
-        if (!token) {
-            alert('Отсутствует токен сброса пароля');
-            return;
-        }
-
-        try {
-            await api.resetPassword(token, newPassword);
-            alert('Пароль успешно изменен');
-            window.history.replaceState({}, document.title, window.location.pathname);
-            showSection(elements.loginForm);
-        } catch (error) {
-            alert(error.message || 'Ошибка при сбросе пароля');
-        }
-    });
-
-    document.querySelectorAll('#logoutBtn, #ticketListLogoutBtn, #supportLogoutBtn')
+    document.querySelectorAll('#logoutBtn, #ticketListLogoutBtn, #supportLogoutBtn, #adminLogoutBtn')
         .forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn?.addEventListener('click', () => {
                 localStorage.clear();
                 showSection(elements.loginForm);
             });

@@ -2,7 +2,6 @@ import { showSection, elements, statusLocales, productLocales} from './utils.js'
 import { api } from './api.js';
 
 let allTicketsCache = []; 
-let staffAnalyticsCache = [];
 
 export const showAdminDashboard = () => {
     showSection(elements.adminDashboard);
@@ -535,14 +534,21 @@ const loadStatistics = async () => {
                     },
                     labels: productChartData.map(item => item.product),
                     legend: {
-                        position: 'right',
-                        offsetY: 0,
-                        height: 350,
+                        position: 'bottom',
                         formatter: function(seriesName, opts) {
                             const value = opts.w.globals.series[opts.seriesIndex];
                             const total = opts.w.globals.series.reduce((a, b) => a + b, 0);
                             const percentage = ((value / total) * 100).toFixed(1);
                             return `${seriesName} - ${value} (${percentage}%)`;
+                        },
+                        containerMargin: {
+                            top: 20,
+                            bottom: 20
+                        },
+                        floating: false,
+                        itemMargin: {
+                            horizontal: 5,
+                            vertical: 5
                         }
                     },
                     plotOptions: {
@@ -553,20 +559,37 @@ const loadStatistics = async () => {
                                     show: true,
                                     total: {
                                         show: true,
-                                        label: 'Всего заявок',
-                                        formatter: function(w) {
-                                            return w.globals.series.reduce((a, b) => a + b, 0);
-                                        }
+                                        label: 'Всего заявок'
                                     }
                                 }
                             }
                         }
                     },
-                    colors: [
-                        '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', 
-                        '#6366f1', '#ec4899', '#14b8a6', '#8b5cf6',
-                        '#64748b'
-                    ]
+                    responsive: [{
+                        breakpoint: 768,
+                        options: {
+                            chart: {
+                                height: 380
+                            },
+                            legend: {
+                                position: 'bottom',
+                                horizontalAlign: 'center',
+                                floating: false,
+                                offsetY: 10,
+                                itemMargin: {
+                                    horizontal: 5,
+                                    vertical: 3
+                                }
+                            },
+                            plotOptions: {
+                                pie: {
+                                    donut: {
+                                        size: '65%'
+                                    }
+                                }
+                            }
+                        }
+                    }]
                 }
             );
             await productsChart.render();
@@ -606,38 +629,46 @@ const loadStatistics = async () => {
                         offsetY: -20,
                         style: {
                             fontSize: '12px',
-                            colors: ["#304758"]
+                            colors: ["#1e293b"]
                         }
                     },
                     xaxis: {
                         categories: Object.keys(responseTimeRanges),
-                        position: 'bottom',
-                        labels: {
-                            style: {
-                                fontSize: '12px'
-                            }
-                        }
+                        position: 'bottom'
                     },
-                    yaxis: {
-                        title: {
-                            text: 'Количество заявок',
-                            style: {
-                                fontSize: '1rem',
-                                fontWeight: 500,
-                                fontFamily: "'Inter', sans-serif",
-                                color: '#1e293b'
-                            }
-                        },
-                        labels: {
-                            style: {
-                                fontSize: '0.875rem',
-                                fontFamily: "'Inter', sans-serif",
-                                colors: '#64748b'
+                    responsive: [{
+                        breakpoint: 768,
+                        options: {
+                            chart: {
+                                height: 380
                             },
-                            formatter: (value) => Math.round(value)
+                            plotOptions: {
+                                bar: {
+                                    columnWidth: '85%'
+                                }
+                            },
+                            dataLabels: {
+                                style: {
+                                    fontSize: '10px'
+                                }
+                            },
+                            xaxis: {
+                                labels: {
+                                    rotate: -45,
+                                    style: {
+                                        fontSize: '10px'
+                                    }
+                                }
+                            },
+                            yaxis: {
+                                labels: {
+                                    style: {
+                                        fontSize: '10px'
+                                    }
+                                }
+                            }
                         }
-                    },
-                    colors: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444']
+                    }]
                 }
             );
             await responseTimeChart.render();
