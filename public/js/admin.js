@@ -2,6 +2,7 @@ import { showSection, elements, statusLocales, productLocales} from './utils.js'
 import { api } from './api.js';
 
 let allTicketsCache = []; 
+let staffAnalyticsCache = [];
 
 export const showAdminDashboard = () => {
     showSection(elements.adminDashboard);
