@@ -65,10 +65,27 @@ export const queries = {
 
     async getAllTickets() {
         const query = `
-            SELECT t.*, u.email as user_email, s.email as support_email 
+            WITH first_responses AS (
+                SELECT 
+                    t.id as ticket_id,
+                    t.created_at as ticket_created,
+                    MIN(c.created_at) as first_response,
+                    EXTRACT(EPOCH FROM (MIN(c.created_at) - t.created_at))/60 as response_time
+                FROM tickets t
+                LEFT JOIN chats c ON c.ticket_id = t.id 
+                LEFT JOIN users u ON c.sender_id = u.id AND u.role = 'support'
+                WHERE u.id IS NOT NULL
+                GROUP BY t.id, t.created_at
+            )
+            SELECT 
+                t.*,
+                u.email as user_email,
+                s.email as support_email,
+                fr.response_time
             FROM tickets t
             LEFT JOIN users u ON t.user_id = u.id
             LEFT JOIN users s ON t.support_id = s.id
+            LEFT JOIN first_responses fr ON t.id = fr.ticket_id
             ORDER BY t.created_at DESC
         `;
         const result = await pool.query(query);

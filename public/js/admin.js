@@ -499,15 +499,18 @@ const loadStatistics = async () => {
         };
 
         filteredTickets.forEach(ticket => {
-            const responseTime = ticket.response_time || 0;
-            if (responseTime <= 10) {
-                responseTimeRanges['До 10 мин']++;
-            } else if (responseTime <= 30) {
-                responseTimeRanges['10-30 мин']++;
-            } else if (responseTime <= 60) {
-                responseTimeRanges['30-60 мин']++;
-            } else {
-                responseTimeRanges['Более часа']++;
+            // Пропускаем тикеты без ответа
+            if (ticket.response_time !== null) {
+                const responseTime = Math.round(ticket.response_time);
+                if (responseTime <= 10) {
+                    responseTimeRanges['До 10 мин']++;
+                } else if (responseTime <= 30) {
+                    responseTimeRanges['10-30 мин']++;
+                } else if (responseTime <= 60) {
+                    responseTimeRanges['30-60 мин']++;
+                } else {
+                    responseTimeRanges['Более часа']++;
+                }
             }
         });
 
